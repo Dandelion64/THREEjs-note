@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+
+
+
+<!-- Ref: https://medium.com/%E5%B0%8F%E5%BD%A5%E5%BD%A5%E7%9A%84%E5%89%8D%E7%AB%AF%E4%BA%94%E5%9B%9B%E4%B8%89/three-js%E5%88%9D%E5%BF%83%E8%80%85%E5%85%A5%E9%96%80%E7%AF%87-607732c6fc18 -->
+<!-- Ref2: https://medium.com/%E5%B0%8F%E5%BD%A5%E5%BD%A5%E7%9A%84%E5%89%8D%E7%AB%AF%E4%BA%94%E5%9B%9B%E4%B8%89/threejs-%E5%88%9D%E5%BF%83%E8%80%85%E5%85%A5%E9%96%80-%E5%9B%9B-%E6%9D%90%E8%B3%AA-material-4434dfa97845 -->
+<!-- Ref3: https://medium.com/%E5%B0%8F%E5%BD%A5%E5%BD%A5%E7%9A%84%E5%89%8D%E7%AB%AF%E4%BA%94%E5%9B%9B%E4%B8%89/threejs-%E5%88%9D%E5%BF%83%E8%80%85%E5%85%A5%E9%96%80-%E4%B8%83-%E6%8E%A7%E5%88%B6%E5%99%A8-orbitcontrols-7b8d7c74a174 -->
+
+
+
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
@@ -28,10 +37,20 @@
             document.body.appendChild(renderer.domElement);
 
             const geometry = new THREE.BoxGeometry(1, 1, 1);
-            const material = new THREE.MeshBasicMaterial({ color: 0xff77ff });
+            const material = new THREE.MeshPhongMaterial({ color: 0xff0000 });
             const cube = new THREE.Mesh(geometry, material);
             scene.add(cube);
-
+            
+            const ambientLight = new THREE.AmbientLight("#0c0c0c"); //建立環境光
+            scene.add(ambientLight); //把環境光添加到場景
+            
+            var spoltLight = new THREE.SpotLight("#FF0000"); //建立聚光燈
+            spoltLight.position.set(3, 3, 3); // 設定光源位置
+            spoltLight.target = cube; // 設定光源目標
+            scene.add(spoltLight); //把聚光燈添加到場景
+            
+            // 等價
+            // camera.position.set(0, 0, 3);
             camera.position.z = 3;
 
             function animate() {
