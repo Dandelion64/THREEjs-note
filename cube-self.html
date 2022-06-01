@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>CUBE-SELF</title>
+    </head>
+    <body>
+        <script src="./js/three.js"></script>
+        <script src="./js/OrbitControls.js"></script>
+        <script>
+
+
+            let camera, scene, renderer;
+            let mesh;
+
+            const onWindowResize = () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjecttionMatrix();
+                renderer.setSize(
+                    window.innerWidth * 0.982,
+                    window.innerHeight * 0.982
+                );
+            };
+
+            const init = () => {
+                camera = new THREE.PerspectiveCamera(
+                    70,
+                    window.innerWidth / window.innerHeight,
+                    1,
+                    10000
+                );
+                camera.position.z = 1200;
+
+                scene = new THREE.Scene();
+
+                // Change backgorund color
+                // Ref: https://stackoverflow.com/questions/16177056/changing-three-js-background-to-transparent-or-other-color
+                scene.background = new THREE.Color(0xe1e4e5);
+
+                // Ref: http://wwwang.tw/blog/three-js-%E8%A7%A3%E6%B1%BA%E9%81%A0%E8%B7%9D%E9%9B%A2%E8%B2%BC%E5%9C%96%E6%A8%A1%E7%B3%8A-texture-blurer/
+
+                const a_ = new THREE.TextureLoader().load(
+                    "./box/0_a.png"
+                );
+                a_.minFilter = THREE.NearestFilter;
+                a_.magFilter = THREE.LinearFilter;
+                const b_ = new THREE.TextureLoader().load(
+                    "./box/2_b.png"
+                );
+                b_.minFilter = THREE.NearestFilter;
+                b_.magFilter = THREE.LinearFilter;
+                const c_ = new THREE.TextureLoader().load(
+                    "./box/0_t.png"
+                );
+                c_.minFilter = THREE.NearestFilter;
+                c_.magFilter = THREE.LinearFilter;
+                const d_ = new THREE.TextureLoader().load(
+                    "./box/1_a.png"
+                );
+                d_.minFilter = THREE.NearestFilter;
+                d_.magFilter = THREE.LinearFilter;
+                const e_ = new THREE.TextureLoader().load(
+                    "./box/1_b.png"
+                );
+                e_.minFilter = THREE.NearestFilter;
+                e_.magFilter = THREE.LinearFilter;
+                const f_ = new THREE.TextureLoader().load(
+                    "./box/1_t.png"
+                );
+                f_.minFilter = THREE.NearestFilter;
+                f_.magFilter = THREE.LinearFilter;
+
+                const geometry = new THREE.BoxGeometry(512, 512, 512);
+
+                const material_1 = new THREE.MeshBasicMaterial({ map: a_ });
+                const material_2 = new THREE.MeshBasicMaterial({ map: b_ });
+                const material_3 = new THREE.MeshBasicMaterial({ map: c_ });
+                const material_4 = new THREE.MeshBasicMaterial({ map: d_ });
+                const material_5 = new THREE.MeshBasicMaterial({ map: e_ });
+                const material_6 = new THREE.MeshBasicMaterial({ map: f_ });
+
+                const materials = [];
+
+                materials.push(material_1);
+                materials.push(material_2);
+                materials.push(material_3);
+                materials.push(material_4);
+                materials.push(material_5);
+                materials.push(material_6);
+
+                mesh = new THREE.Mesh(geometry, materials);
+                scene.add(mesh);
+
+                renderer = new THREE.WebGLRenderer({
+                    antialias: true,
+                    alpha: true,
+                });
+
+                // effectFXAA = new ShaderPass(FXAAShader);
+                // effectFXAA.uniforms["resolution"].value.x =
+                //     1 / (window.innerWidth * pixelRatio);
+                // effectFXAA.uniforms["resolution"].value.y =
+                //     1 / (window.innerHeight * pixelRatio);
+                // composer.addPass(effectFXAA);
+
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+                controls.enableZoom = true; //啟用縮放
+                controls.enableDamping = true; // 啟用阻尼效果
+                controls.dampingFactor = 0.25; // 阻尼系數
+                controls.autoRotate = true; //啟用自動旋轉
+
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(
+                    window.innerWidth * 0.982,
+                    window.innerHeight * 0.982
+                );
+
+                document.body.appendChild(renderer.domElement);
+
+                // controls.update();
+
+                window.addEventListener("resize", onWindowResize, false);
+            };
+
+            init();
+
+            const animate = () => {
+                requestAnimationFrame(animate); // 60FPS
+                controls.update();
+                mesh.rotation.x = 40;
+                // mesh.rotation.y -= 0.005;
+                mesh.rotation.z = 40;
+                renderer.render(scene, camera);
+            };
+
+            animate();
+
+            // return (
+            // (e.prototype.init = function () {
+            //     (this._pathList = [
+            //         [
+            //             "assets/image/box/0_a.png",
+            //             "assets/image/box/0_b.png",
+            //             "assets/image/box/0_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/1_a.png",
+            //             "assets/image/box/1_b.png",
+            //             "assets/image/box/1_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/2_a.png",
+            //             "assets/image/box/2_b.png",
+            //             "assets/image/box/2_c.png",
+            //             "assets/image/box/2_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/3_a.png",
+            //             "assets/image/box/3_b.png",
+            //             "assets/image/box/3_c.png",
+            //             "assets/image/box/3_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/4_a.png",
+            //             "assets/image/box/4_b.png",
+            //             "assets/image/box/4_c.png",
+            //             "assets/image/box/4_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/5_a.png",
+            //             "assets/image/box/5_b.png",
+            //             "assets/image/box/5_c.png",
+            //             "assets/image/box/5_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/6_a.png",
+            //             "assets/image/box/6_b.png",
+            //             "assets/image/box/6_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/7_a.png",
+            //             "assets/image/box/7_b.png",
+            //             "assets/image/box/7_c.png",
+            //             "assets/image/box/7_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/8_a.png",
+            //             "assets/image/box/8_b.png",
+            //             "assets/image/box/8_c.png",
+            //             "assets/image/box/8_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/9_a.png",
+            //             "assets/image/box/9_b.png",
+            //             "assets/image/box/9_c.png",
+            //             "assets/image/box/9_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/10_a.png",
+            //             "assets/image/box/10_b.png",
+            //             "assets/image/box/10_c.png",
+            //             "assets/image/box/10_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/11_a.png",
+            //             "assets/image/box/11_b.png",
+            //             "assets/image/box/11_c.png",
+            //             "assets/image/box/11_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/12_a.png",
+            //             "assets/image/box/12_b.png",
+            //             "assets/image/box/12_c.png",
+            //             "assets/image/box/12_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/13_a.png",
+            //             "assets/image/box/13_b.png",
+            //             "assets/image/box/13_c.png",
+            //             "assets/image/box/13_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/14_a.png",
+            //             "assets/image/box/14_b.png",
+            //             "assets/image/box/14_c.png",
+            //             "assets/image/box/14_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/15_a.png",
+            //             "assets/image/box/15_b.png",
+            //             "assets/image/box/15_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/16_a.png",
+            //             "assets/image/box/16_b.png",
+            //             "assets/image/box/16_c.png",
+            //             "assets/image/box/16_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/17_a.png",
+            //             "assets/image/box/17_b.png",
+            //             "assets/image/box/17_c.png",
+            //             "assets/image/box/17_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/18_a.png",
+            //             "assets/image/box/18_b.png",
+            //             "assets/image/box/18_c.png",
+            //             "assets/image/box/18_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/19_a.png",
+            //             "assets/image/box/19_b.png",
+            //             "assets/image/box/19_c.png",
+            //             "assets/image/box/19_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/20_a.png",
+            //             "assets/image/box/20_b.png",
+            //             "assets/image/box/20_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/21_a.png",
+            //             "assets/image/box/21_b.png",
+            //             "assets/image/box/21_c.png",
+            //             "assets/image/box/21_d.png",
+            //             "assets/image/box/21_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/22_a.png",
+            //             "assets/image/box/22_b.png",
+            //             "assets/image/box/22_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/23_a.png",
+            //             "assets/image/box/23_b.png",
+            //             "assets/image/box/23_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/24_a.png",
+            //             "assets/image/box/24_b.png",
+            //             "assets/image/box/24_c.png",
+            //             "assets/image/box/24_d.png",
+            //             "assets/image/box/24_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/25_a.png",
+            //             "assets/image/box/25_b.png",
+            //             "assets/image/box/25_t.png",
+            //         ],
+            //         ["assets/image/box/26_t.png"],
+            //         ["assets/image/box/27_a.png", "assets/image/box/27_t.png"],
+            //         [
+            //             "assets/image/box/28_a.png",
+            //             "assets/image/box/28_b.png",
+            //             "assets/image/box/28_c.png",
+            //             "assets/image/box/28_t.png",
+            //         ],
+            //         ["assets/image/box/29_t.png"],
+            //         [
+            //             "assets/image/box/30_a.png",
+            //             "assets/image/box/30_b.png",
+            //             "assets/image/box/30_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/31_a.png",
+            //             "assets/image/box/31_b.png",
+            //             "assets/image/box/31_c.png",
+            //             "assets/image/box/31_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/32_a.png",
+            //             "assets/image/box/32_b.png",
+            //             "assets/image/box/32_c.png",
+            //             "assets/image/box/32_t.png",
+            //         ],
+            //         ["assets/image/box/33_t.png"],
+            //         [
+            //             "assets/image/box/34_a.png",
+            //             "assets/image/box/34_b.png",
+            //             "assets/image/box/34_c.png",
+            //             "assets/image/box/34_d.png",
+            //             "assets/image/box/34_t.png",
+            //         ],
+            //         [
+            //             "assets/image/box/35_a.png",
+            //             "assets/image/box/35_b.png",
+            //             "assets/image/box/35_c.png",
+            //             "assets/image/box/35_d.png",
+            //             "assets/image/box/35_t.png",
+            //         ],
+            //         ["assets/image/box/36_t.png"],
+            //         [
+            //             "assets/image/box/37_a.png",
+            //             "assets/image/box/37_b.png",
+            //             "assets/image/box/37_c.png",
+            //             "assets/image/box/37_t.png",
+            //         ],
+            //     ]),
+            //         (this._colorList = [
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 242,
+            //                     (1 / 255) * 248,
+            //                     (1 / 255) * 248
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 97,
+            //                     (1 / 255) * 38,
+            //                     (1 / 255) * 128
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     1,
+            //                     (1 / 255) * 198,
+            //                     (1 / 255) * 212
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 97,
+            //                     (1 / 255) * 38,
+            //                     (1 / 255) * 128
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 253,
+            //                     (1 / 255) * 211,
+            //                     (1 / 255) * 27
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     1,
+            //                     (1 / 255) * 198,
+            //                     (1 / 255) * 212
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 254,
+            //                     (1 / 255) * 246,
+            //                     (1 / 255) * 223
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 232,
+            //                     (1 / 255) * 179,
+            //                     (1 / 255) * 135
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 242,
+            //                     (1 / 255) * 248,
+            //                     (1 / 255) * 248
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 253,
+            //                     (1 / 255) * 211,
+            //                     (1 / 255) * 27
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 97,
+            //                     (1 / 255) * 38,
+            //                     (1 / 255) * 128
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 242,
+            //                     (1 / 255) * 248,
+            //                     (1 / 255) * 248
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 242,
+            //                     (1 / 255) * 248,
+            //                     (1 / 255) * 248
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     0,
+            //                     (1 / 255) * 98,
+            //                     (1 / 255) * 81
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 253,
+            //                     (1 / 255) * 211,
+            //                     (1 / 255) * 27
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 237,
+            //                     (1 / 255) * 24,
+            //                     (1 / 255) * 72
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 19,
+            //                     (1 / 255) * 157,
+            //                     (1 / 255) * 191
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     1,
+            //                     (1 / 255) * 198,
+            //                     (1 / 255) * 212
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     0,
+            //                     (1 / 255) * 98,
+            //                     (1 / 255) * 81
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 253,
+            //                     (1 / 255) * 211,
+            //                     (1 / 255) * 27
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     0,
+            //                     (1 / 255) * 98,
+            //                     (1 / 255) * 81
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 19,
+            //                     (1 / 255) * 157,
+            //                     (1 / 255) * 191
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 232,
+            //                     (1 / 255) * 179,
+            //                     (1 / 255) * 135
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 19,
+            //                     (1 / 255) * 157,
+            //                     (1 / 255) * 191
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 19,
+            //                     (1 / 255) * 157,
+            //                     (1 / 255) * 191
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     1,
+            //                     (1 / 255) * 198,
+            //                     (1 / 255) * 212
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 174,
+            //                     (1 / 255) * 224,
+            //                     (1 / 255) * 215
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 242,
+            //                     (1 / 255) * 248,
+            //                     (1 / 255) * 248
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 253,
+            //                     (1 / 255) * 211,
+            //                     (1 / 255) * 27
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 232,
+            //                     (1 / 255) * 179,
+            //                     (1 / 255) * 135
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 242,
+            //                     (1 / 255) * 248,
+            //                     (1 / 255) * 248
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 200,
+            //                     (1 / 255) * 122,
+            //                     (1 / 255) * 69
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 253,
+            //                     (1 / 255) * 211,
+            //                     (1 / 255) * 27
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 253,
+            //                     (1 / 255) * 211,
+            //                     (1 / 255) * 27
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 242,
+            //                     (1 / 255) * 248,
+            //                     (1 / 255) * 248
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 97,
+            //                     (1 / 255) * 38,
+            //                     (1 / 255) * 128
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 242,
+            //                     (1 / 255) * 248,
+            //                     (1 / 255) * 248
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 237,
+            //                     (1 / 255) * 24,
+            //                     (1 / 255) * 72
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     1,
+            //                     (1 / 255) * 198,
+            //                     (1 / 255) * 212
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 242,
+            //                     (1 / 255) * 248,
+            //                     (1 / 255) * 248
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 242,
+            //                     (1 / 255) * 248,
+            //                     (1 / 255) * 248
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 237,
+            //                     (1 / 255) * 24,
+            //                     (1 / 255) * 72
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 242,
+            //                     (1 / 255) * 248,
+            //                     (1 / 255) * 248
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //             {
+            //                 txt: new THREE.Vector3(
+            //                     (1 / 255) * 232,
+            //                     (1 / 255) * 179,
+            //                     (1 / 255) * 135
+            //                 ),
+            //                 bg: new THREE.Vector3(
+            //                     (1 / 255) * 15,
+            //                     (1 / 255) * 23,
+            //                     (1 / 255) * 70
+            //                 ),
+            //             },
+            //         ]),
+            //         (this._copyColList = [
+            //             { col1: "#0f1746", col2: "#e8b387" },
+            //             { col1: "#ffc6d4", col2: "#612680" },
+            //             { col1: "#ed1848", col2: "#612680" },
+            //             { col1: "#612680", col2: "#139dbf" },
+            //             { col1: "#e8b387", col2: "#0f1746" },
+            //             { col1: "#ffc6d4", col2: "#e8b387" },
+            //             { col1: "#fdd31b", col2: "#612680" },
+            //             { col1: "#ed1848", col2: "#ffc6d4" },
+            //             { col1: "#139dbf", col2: "#0f1746" },
+            //             { col1: "#006251", col2: "#fdd31b" },
+            //             { col1: "#ed1848", col2: "#612680" },
+            //             { col1: "#ffc6d4", col2: "#139dbf" },
+            //             { col1: "#ed1848", col2: "#612680" },
+            //             { col1: "#fdd31b", col2: "#612680" },
+            //             { col1: "#006251", col2: "#e8b387" },
+            //             { col1: "#0f1746", col2: "#8890c1" },
+            //             { col1: "#139dbf", col2: "#ffc6d4" },
+            //             { col1: "#0f1746", col2: "#8890c1" },
+            //             { col1: "#006251", col2: "#ffc6d4" },
+            //             { col1: "#139dbf", col2: "#aee0d7" },
+            //             { col1: "#139dbf", col2: "#0f1746" },
+            //             { col1: "#ffc6d4", col2: "#139dbf" },
+            //             { col1: "#aee0d7", col2: "#612680" },
+            //             { col1: "#0f1746", col2: "#8890c1" },
+            //             { col1: "#e8b387", col2: "#006251" },
+            //             { col1: "#006251", col2: "#fdd31b" },
+            //             { col1: "#612680", col2: "#e8b387" },
+            //             { col1: "#006251", col2: "#fdd31b" },
+            //             { col1: "#fdd31b", col2: "#006251" },
+            //             { col1: "#ed1848", col2: "#ffc6d4" },
+            //             { col1: "#e8b387", col2: "#612680" },
+            //             { col1: "#ffc6d4", col2: "#ed1848" },
+            //             { col1: "#ffc6d4", col2: "#0f1746" },
+            //             { col1: "#139dbf", col2: "#96e1d8" },
+            //             { col1: "#ffc6d4", col2: "#139dbf" },
+            //             { col1: "#ffc6d4", col2: "#fdd31b" },
+            //             { col1: "#139dbf", col2: "#fdd31b" },
+            //             { col1: "#ed1848", col2: "#006251" },
+            //         ]),
+            //         (this._texList = []);
+            //     for (var e = 0; e < this._pathList.length; e++)
+            //         this._texList.push(new Array());
+            //     (this._count1 = 0), (this._count2 = 0), this.firstLoadStart();
+            // }),
+            // (e.prototype.firstLoadStart = function () {
+            //     var t,
+        </script>
+    </body>
+</html>
