@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>CUBE-SELF-02</title>
+        <style type="text/css">
+            body {
+                background-color: #000;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="./js/three.js"></script>
+        <script>
+            let camera, scene, renderer;
+
+            let cubes;
+
+            let mouseX = 0,
+                mouseY = 0;
+
+            let windowHalfX = window.innerWidth / 2;
+            let windowHalfY = window.innerHeight / 2;
+
+            document.addEventListener("mousemove", onDocumentMouseMove);
+
+            const init = () => {
+                const container = document.createElement("div");
+                document.body.appendChild(container);
+
+                camera = new THREE.PerspectiveCamera(
+                    60,
+                    window.innerWidth / window.innerHeight,
+                    1,
+                    1000000
+                );
+                camera.position.z = 20000;
+
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xe1e4e5);
+
+                cubes = [];
+
+                // a_ is side-right
+                const a_ = new THREE.TextureLoader().load("./box/0_a.png");
+                a_.minFilter = THREE.NearestFilter;
+                a_.magFilter = THREE.LinearFilter;
+
+                // b_ is side-left
+                const b_ = new THREE.TextureLoader().load("./box/0_b.png");
+                b_.minFilter = THREE.NearestFilter;
+                b_.magFilter = THREE.LinearFilter;
+
+                // c_ is top
+                const c_ = new THREE.TextureLoader().load("./box/0_t.png");
+                c_.minFilter = THREE.NearestFilter;
+                c_.magFilter = THREE.LinearFilter;
+
+                // d_ is bottom
+                const d_ = new THREE.TextureLoader().load("./box/0_t.png");
+                d_.minFilter = THREE.NearestFilter;
+                d_.magFilter = THREE.LinearFilter;
+
+                // e_ is side-front
+                const e_ = new THREE.TextureLoader().load("./box/0_a.png");
+                e_.minFilter = THREE.NearestFilter;
+                e_.magFilter = THREE.LinearFilter;
+
+                // f_ is side-back
+                const f_ = new THREE.TextureLoader().load("./box/0_b.png");
+                f_.minFilter = THREE.NearestFilter;
+                f_.magFilter = THREE.LinearFilter;
+
+                const material_1 = new THREE.MeshBasicMaterial({ map: a_ });
+                const material_2 = new THREE.MeshBasicMaterial({ map: b_ });
+                const material_3 = new THREE.MeshBasicMaterial({ map: c_ });
+                const material_4 = new THREE.MeshBasicMaterial({ map: d_ });
+                const material_5 = new THREE.MeshBasicMaterial({ map: e_ });
+                const material_6 = new THREE.MeshBasicMaterial({ map: f_ });
+
+                const materials = [];
+
+                materials.push(material_1);
+                materials.push(material_2);
+                materials.push(material_3);
+                materials.push(material_4);
+                materials.push(material_5);
+                materials.push(material_6);
+
+                // const materials = new THREE.MeshNormalMaterial();
+
+                const geometry = new THREE.BoxBufferGeometry(512, 512, 512);
+
+                for (let i = 0; i < 2000; i++) {
+
+                    const mesh = new THREE.Mesh(geometry, materials);
+
+                    mesh.position.x = Math.random() * 16000 - 8000;
+                    mesh.position.y = Math.random() * 16000 - 8000;
+                    mesh.position.z = Math.random() * 16000 - 8000;
+                    mesh.rotation.x = Math.random() * 2 * Math.PI;
+                    mesh.rotation.y = Math.random() * 2 * Math.PI;
+                    mesh.scale.x = 
+                        mesh.scale.y = 
+                        mesh.scale.z =
+                            Math.random();
+
+                    cubes.push(mesh);
+
+                    scene.add(mesh);
+
+                    console.log(i);
+                }
+
+
+                renderer = new THREE.WebGLRenderer({
+                    antialias: true,
+                    alpha: true,
+                });
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                container.appendChild(renderer.domElement);
+            };
+
+            function onWindowResize() {
+                windowHalfX = window.innerWidth / 2;
+                windowHalfY = window.innerHeight / 2;
+
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            function onDocumentMouseMove(event) {
+                mouseX = (event.clientX - windowHalfX) * 10;
+                mouseY = (event.clientY - windowHalfY) * 10;
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                render();
+            }
+
+            function render() {
+                camera.position.x += (mouseX - camera.position.x) * 0.05;
+                camera.position.y += (-mouseY - camera.position.y) * 0.05;
+                camera.lookAt(scene.position);
+
+                for (let i = 0; i<cubes.length; i++) {
+                    cubes[i].rotation.x += 0.01;
+                    cubes[i].rotation.y += 0.01;
+                    cubes[i].rotation.z += 0.01;
+                }
+
+                renderer.render(scene, camera);
+            }
+
+            init();
+            animate();
+
+            // [17.1286,8.50039,6.84587,17.0639,8.57706,6.81993,18.0177,9.74781,6.61935,18.0336,9.71237,6.64026,17.9597,9.72328,6.6262,16.2604,8.72106,6.89316,16.3261,8.85764,6.93959,16.2644,8.72875,6.84511,15.9365,5.75408,6.78127,15.9435,5.77206,6.77742,15.9265,5.74238,6.79333,16.4881,8.93919,7.0449,16.41,8.93576,7.00926,16.4524,8.87929,7.04058,16.9125,11.8296,6.80772,16.912,11.8859,6.79403,16.8618,11.8172,6.71863,16.163,8.38991,6.89224,16.1608,8.40357,6.96257,16.1755,8.46469,6.9002,16.7995,11.1262,6.62945,16.8121,11.2394,6.71704,16.8027,11.1545,6.63408,16.7995,11.1262,6.62945,16.8139,11.1355,6.77002,16.8121,11.2394,6.71704,16.8027,11.1545,6.63408,16.8121,11.2394,6.71704,16.8034,11.1806,6.65035,16.8027,11.1545,6.63408,16.8143,11.1383,6.57191,16.7995,11.1262,6.62945,16.8027,11.1545,6.63408,16.8075,11.2079,6.63814,16.8143,11.1383,6.57191,16.8027,11.1545,6.63408,16.8034,11.1806,6.65035,16.8075,11.2079,6.63814,16.8785,11.7322,6.50817,16.8456,11.7612,6.59539,16.8642,11.8179,6.55633,16.4774,7.37956,6.94666,16.5058,7.42762,6.9549,16.5867,7.45988,7.04086,16.5058,7.42762,6.95]
+        </script>
+        <script
+            crossorigin
+            src="https://unpkg.com/react@18/umd/react.production.min.js"
+        ></script>
+        <script
+            crossorigin
+            src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"
+        ></script>
+    </body>
+</html>
