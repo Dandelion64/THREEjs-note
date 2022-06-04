@@ -94,36 +94,36 @@
 
 				group = new THREE.Group();
 
-                const geometry = new THREE.BoxBufferGeometry(8, 8, 8);
+                const geometry = new THREE.BoxBufferGeometry(32, 32, 32);
 
                 // a_ is side-right
-                const a_ = new THREE.TextureLoader().load("./box/0_a.png");
-                a_.minFilter = THREE.NearestFilter;
+                const a_ = new THREE.TextureLoader().load("./box/1_a.png");
+                a_.minFilter = THREE.LinearFilter;
                 a_.magFilter = THREE.LinearFilter;
 
                 // b_ is side-left
-                const b_ = new THREE.TextureLoader().load("./box/0_b.png");
-                b_.minFilter = THREE.NearestFilter;
+                const b_ = new THREE.TextureLoader().load("./box/1_a.png");
+                b_.minFilter = THREE.LinearFilter;
                 b_.magFilter = THREE.LinearFilter;
 
                 // c_ is top
-                const c_ = new THREE.TextureLoader().load("./box/0_t.png");
-                c_.minFilter = THREE.NearestFilter;
+                const c_ = new THREE.TextureLoader().load("./box/1_a.png");
+                c_.minFilter = THREE.LinearFilter;
                 c_.magFilter = THREE.LinearFilter;
 
                 // d_ is bottom
-                const d_ = new THREE.TextureLoader().load("./box/0_t.png");
-                d_.minFilter = THREE.NearestFilter;
+                const d_ = new THREE.TextureLoader().load("./box/1_a.png");
+                d_.minFilter = THREE.LinearFilter;
                 d_.magFilter = THREE.LinearFilter;
 
                 // e_ is side-front
-                const e_ = new THREE.TextureLoader().load("./box/0_a.png");
-                e_.minFilter = THREE.NearestFilter;
+                const e_ = new THREE.TextureLoader().load("./box/1_a.png");
+                e_.minFilter = THREE.LinearFilter;
                 e_.magFilter = THREE.LinearFilter;
 
                 // f_ is side-back
-                const f_ = new THREE.TextureLoader().load("./box/0_b.png");
-                f_.minFilter = THREE.NearestFilter;
+                const f_ = new THREE.TextureLoader().load("./box/1_a.png");
+                f_.minFilter = THREE.LinearFilter;
                 f_.magFilter = THREE.LinearFilter;
 
                 const material_1 = new THREE.MeshBasicMaterial({ map: a_ });
