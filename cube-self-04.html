@@ -166,10 +166,15 @@
 
                 stats.begin();
 
-                camera.position.y =
-                    500 * Math.sin(((37 + mouseYAngle/3) * Math.PI) / 180);
-                camera.position.z =
-                    500 * Math.cos(((37 + mouseYAngle/3) * Math.PI) / 180);
+                // camera.position.y =
+                //     500 * Math.sin(((37 + mouseYAngle/3) * Math.PI) / 180);
+                // camera.position.z =
+                //     500 * Math.cos(((37 + mouseYAngle/3) * Math.PI) / 180);
+                camera.position.y = 150 + 150 * Math.sin((mouseY - camera.position.y) * 0.001);
+                // camera.position.y = 300;
+                camera.position.z = 150 + 150 * Math.cos((mouseY - camera.position.y) * 0.001);
+                // camera.position.z = 400;
+                camera.lookAt(scene.position);
                 camera.lookAt(0, 0, 0);
 
                 for (let i = 0; i < scene.children.length; i++) {
@@ -223,6 +228,7 @@
             }
 
             music.addEventListener("click", musicPlay);
+            music.addEventListener("touch", musicPlay);
         </script>
     </body>
 </html>
