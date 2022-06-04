@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>CUBE SELF 03 FXAA</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="reset.css">
+		<style>
+			body {
+				background-color: #e1e4e5;
+			}
+
+            #navbar {
+                width: 100%;
+                background-color: #999;
+                color: #fff;
+                text-align: center;
+                height: 50px;
+                line-height: 50px;
+            }
+
+			#container {
+				position: absolute;
+				top: 50px;
+				width: 100%;
+				bottom: 0px;
+			}
+		</style>
+	</head>
+
+	<body>
+
+		<div id="navbar">
+			NAVBAR
+		</div>
+		<div id="container">
+		</div>
+
+		<!-- Import maps polyfill -->
+		<!-- Remove this when import maps will be widely supported -->
+		<script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../build/three.module.js"
+				}
+			}
+		</script>
+
+		<script type="module">
+
+			import * as THREE from 'three';
+
+			import { EffectComposer } from './jsm/postprocessing/EffectComposer.js';
+			import { RenderPass } from './jsm/postprocessing/RenderPass.js';
+			import { ShaderPass } from './jsm/postprocessing/ShaderPass.js';
+			import { CopyShader } from './jsm/shaders/CopyShader.js';
+			import { FXAAShader } from './jsm/shaders/FXAAShader.js';
+
+            import Stats from './jsm/libs/stats.module.js';
+
+			let camera, scene, renderer, clock, group, container;
+
+            let stats;
+
+			let composer1, composer2, fxaaPass;
+
+			init();
+			animate();
+
+			function init() {
+
+				container = document.querySelector( '#container');
+
+				camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 1, 2000);
+				camera.position.z = 500;
+
+				scene = new THREE.Scene();
+			
+				clock = new THREE.Clock();
+
+				//
+
+				// const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444 );
+				// hemiLight.position.set( 0, 1000, 0 );
+				// scene.add( hemiLight );
+
+				// const dirLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
+				// dirLight.position.set( - 3000, 1000, - 1000 );
+				// scene.add( dirLight );
+
+				//
+
+				group = new THREE.Group();
+
+                const geometry = new THREE.BoxBufferGeometry(8, 8, 8);
+
+                // a_ is side-right
+                const a_ = new THREE.TextureLoader().load("./box/0_a.png");
+                a_.minFilter = THREE.NearestFilter;
+                a_.magFilter = THREE.LinearFilter;
+
+                // b_ is side-left
+                const b_ = new THREE.TextureLoader().load("./box/0_b.png");
+                b_.minFilter = THREE.NearestFilter;
+                b_.magFilter = THREE.LinearFilter;
+
+                // c_ is top
+                const c_ = new THREE.TextureLoader().load("./box/0_t.png");
+                c_.minFilter = THREE.NearestFilter;
+                c_.magFilter = THREE.LinearFilter;
+
+                // d_ is bottom
+                const d_ = new THREE.TextureLoader().load("./box/0_t.png");
+                d_.minFilter = THREE.NearestFilter;
+                d_.magFilter = THREE.LinearFilter;
+
+                // e_ is side-front
+                const e_ = new THREE.TextureLoader().load("./box/0_a.png");
+                e_.minFilter = THREE.NearestFilter;
+                e_.magFilter = THREE.LinearFilter;
+
+                // f_ is side-back
+                const f_ = new THREE.TextureLoader().load("./box/0_b.png");
+                f_.minFilter = THREE.NearestFilter;
+                f_.magFilter = THREE.LinearFilter;
+
+                const material_1 = new THREE.MeshBasicMaterial({ map: a_ });
+                const material_2 = new THREE.MeshBasicMaterial({ map: b_ });
+                const material_3 = new THREE.MeshBasicMaterial({ map: c_ });
+                const material_4 = new THREE.MeshBasicMaterial({ map: d_ });
+                const material_5 = new THREE.MeshBasicMaterial({ map: e_ });
+                const material_6 = new THREE.MeshBasicMaterial({ map: f_ });
+
+                const materials = [];
+
+                materials.push(material_1);
+                materials.push(material_2);
+                materials.push(material_3);
+                materials.push(material_4);
+                materials.push(material_5);
+                materials.push(material_6);
+
+				for ( let i = 0; i < 1000; i ++ ) {
+
+					const mesh = new THREE.Mesh(geometry, materials);
+
+					mesh.position.x = Math.random() * 500 - 250;
+					mesh.position.y = Math.random() * 500 - 250;
+					mesh.position.z = Math.random() * 500 - 250;
+
+					mesh.scale.setScalar(Math.random() * 2 + 1);
+
+					mesh.rotation.x = Math.random() * Math.PI;
+					mesh.rotation.y = Math.random() * Math.PI;
+					mesh.rotation.z = Math.random() * Math.PI;
+
+					group.add(mesh);
+
+				}
+
+				scene.add(group);
+
+				//
+
+				renderer = new THREE.WebGLRenderer();
+				renderer.autoClear = false;
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setSize(container.offsetWidth, container.offsetHeight);
+				container.appendChild(renderer.domElement);
+
+                stats = new Stats();
+				container.appendChild(stats.dom);
+
+				//
+
+				const renderPass = new RenderPass(scene, camera);
+				renderPass.clearColor = new THREE.Color(0, 0, 0);
+				renderPass.clearAlpha = 0;
+
+				//
+
+				fxaaPass = new ShaderPass(FXAAShader);
+
+				const copyPass = new ShaderPass(CopyShader);
+
+				composer1 = new EffectComposer(renderer);
+				composer1.addPass(renderPass);
+				composer1.addPass(copyPass);
+
+				//
+
+				const pixelRatio = renderer.getPixelRatio();
+
+				fxaaPass.material.uniforms['resolution'].value.x = 1 / (container.offsetWidth * pixelRatio);
+				fxaaPass.material.uniforms['resolution'].value.y = 1 / (container.offsetHeight * pixelRatio);
+
+				composer2 = new EffectComposer(renderer);
+				composer2.addPass(renderPass);
+				composer2.addPass(fxaaPass);
+
+				//
+
+				window.addEventListener('resize', onWindowResize);
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = container.offsetWidth / container.offsetHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize(container.offsetWidth, container.offsetHeight);
+				composer1.setSize(container.offsetWidth, container.offsetHeight);
+				composer2.setSize(container.offsetWidth, container.offsetHeight);
+
+				const pixelRatio = renderer.getPixelRatio();
+
+				fxaaPass.material.uniforms[ 'resolution' ].value.x = 1 / (container.offsetWidth * pixelRatio);
+				fxaaPass.material.uniforms[ 'resolution' ].value.y = 1 / (container.offsetHeight * pixelRatio);
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame(animate);
+
+				const halfWidth = container.offsetWidth / 2;
+
+				group.rotation.y += clock.getDelta() * 0.1;
+
+				renderer.setScissorTest(true);
+
+				renderer.setScissor(0, 0, halfWidth - 1, container.offsetHeight);
+				composer1.render();
+
+				renderer.setScissor(halfWidth, 0, halfWidth, container.offsetHeight);
+				composer2.render();
+
+				renderer.setScissorTest(false);
+
+                stats.update();
+			}
+
+		</script>
+	</body>
+</html>
