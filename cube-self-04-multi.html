@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>CUBE SELF 04 SMAA</title>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+        />
+        <link type="text/css" rel="stylesheet" href="reset.css" />
+        <style>
+            body {
+                background-color: #e1e4e5;
+            }
+
+            #navbar {
+                position: absolute;
+                width: 100%;
+                background-color: #999;
+                color: #fff;
+                text-align: center;
+                height: 50px;
+                line-height: 50px;
+            }
+
+            #music {
+                position: absolute;
+                right: 20px;
+                top: 0;
+                color: #66f;
+                cursor: pointer;
+            }
+
+            #container {
+                position: absolute;
+                width: 100%;
+                top: 50px;
+                bottom: 0px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div id="navbar">
+            NAVBAR
+            <div id="music">PLAY/PAUSE</div>
+        </div>
+        <div id="container"></div>
+
+        <!-- Import maps polyfill -->
+        <!-- Remove this when import maps will be widely supported -->
+        <script
+            async
+            src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"
+        ></script>
+
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "../build/three.module.js"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as THREE from "three";
+
+            import Stats from "./jsm/libs/stats.module.js";
+
+            import { EffectComposer } from "./jsm/postprocessing/EffectComposer.js";
+            import { RenderPass } from "./jsm/postprocessing/RenderPass.js";
+            import { SMAAPass } from "./jsm/postprocessing/SMAAPass.js";
+
+            let camera, scene, renderer, composer, stats, group;
+
+            let mouseX = 0;
+            let mouseY = 0;
+
+            let windowHalfX = window.innerWidth / 2;
+            let windowHalfY = window.innerHeight / 2;
+
+            let cubes = [];
+
+            init();
+            animate();
+
+            function init() {
+                const container = document.querySelector("#container");
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.body.appendChild(renderer.domElement);
+
+                stats = new Stats();
+                container.appendChild(stats.dom);
+
+                //
+
+                camera = new THREE.PerspectiveCamera(
+                    70,
+                    window.innerWidth / window.innerHeight,
+                    1,
+                    20000
+                );
+                camera.position.set(0, 300, 400);
+                camera.rotation.set(0, 0, 0);
+                camera.lookAt(0, 0, 0);
+
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xe1e4e5);
+
+                // camera.lookAt(scene.position);
+                // console.log(scene.position);
+
+                group = new THREE.Group();
+
+                const geometry = new THREE.BoxBufferGeometry(16, 16, 16);
+
+                // a_ is side-right
+                const a_ = new THREE.TextureLoader().load("./box/15_a.png");
+                a_.anisotropy = 4;
+                a_.minFilter = THREE.NearestFilter;
+                a_.magFilter = THREE.LinearFilter;
+
+                // b_ is side-left
+                const b_ = new THREE.TextureLoader().load("./box/15_a.png");
+                b_.anisotropy = 4;
+                b_.minFilter = THREE.NearestFilter;
+                b_.magFilter = THREE.LinearFilter;
+
+                // c_ is top
+                const c_ = new THREE.TextureLoader().load("./box/15_t.png");
+                c_.anisotropy = 4;
+                c_.minFilter = THREE.NearestFilter;
+                c_.magFilter = THREE.LinearFilter;
+
+                // d_ is bottom
+                const d_ = new THREE.TextureLoader().load("./box/15_t.png");
+                d_.anisotropy = 4;
+                d_.minFilter = THREE.NearestFilter;
+                d_.magFilter = THREE.LinearFilter;
+
+                // e_ is side-front
+                const e_ = new THREE.TextureLoader().load("./box/15_b.png");
+                e_.anisotropy = 4;
+                e_.minFilter = THREE.NearestFilter;
+                e_.magFilter = THREE.LinearFilter;
+
+                // f_ is side-back
+                const f_ = new THREE.TextureLoader().load("./box/15_b.png");
+                f_.anisotropy = 4;
+                f_.minFilter = THREE.NearestFilter;
+                f_.magFilter = THREE.LinearFilter;
+
+                const material_1 = new THREE.MeshBasicMaterial({ map: a_ });
+                const material_2 = new THREE.MeshBasicMaterial({ map: b_ });
+                const material_3 = new THREE.MeshBasicMaterial({ map: c_ });
+                const material_4 = new THREE.MeshBasicMaterial({ map: d_ });
+                const material_5 = new THREE.MeshBasicMaterial({ map: e_ });
+                const material_6 = new THREE.MeshBasicMaterial({ map: f_ });
+
+                const materials = [];
+
+                materials.push(material_1);
+                materials.push(material_2);
+                materials.push(material_3);
+                materials.push(material_4);
+                materials.push(material_5);
+                materials.push(material_6);
+
+                for (let i = 0; i < 1000; i++) {
+                    const mesh = new THREE.Mesh(geometry, materials);
+
+                    mesh.position.x = Math.random() * 500 - 250;
+                    mesh.position.y = Math.random() * 500 - 250;
+                    mesh.position.z = Math.random() * 500 - 250;
+
+                    mesh.scale.setScalar(Math.random() * 2 + 1);
+
+                    mesh.rotation.x = Math.random() * Math.PI;
+                    mesh.rotation.y = Math.random() * Math.PI;
+                    mesh.rotation.z = Math.random() * Math.PI;
+
+                    group.add(mesh);
+
+                    cubes.push(mesh);
+                }
+
+                scene.add(group);
+
+                // postprocessing
+
+                composer = new EffectComposer(renderer);
+                composer.addPass(new RenderPass(scene, camera));
+
+                const pass = new SMAAPass(
+                    window.innerWidth * renderer.getPixelRatio(),
+                    window.innerHeight * renderer.getPixelRatio()
+                );
+                composer.addPass(pass);
+
+                window.addEventListener("resize", onWindowResize);
+            }
+
+            function onWindowResize() {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(width, height);
+                composer.setSize(width, height);
+            }
+
+            function onDocumentMouseMove(event) {
+                mouseX = (event.clientX - windowHalfX)*2;
+                mouseY = (event.clientY - windowHalfY)*2;
+            }
+
+            document.addEventListener("mousemove", onDocumentMouseMove);
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                stats.begin();
+
+                camera.position.x = 500 * Math.sin((mouseX - camera.position.x) * 0.0005);
+                camera.position.y = 500 * Math.sin((mouseY - camera.position.y) * 0.0005);
+                camera.position.z = 500 * Math.cos((mouseY - camera.position.y) * 0.0005);
+                camera.lookAt(scene.position);
+
+                for (let i = 0; i < cubes.length; i++) {
+                    cubes[i].rotation.x += 0.02;
+                    cubes[i].rotation.y += 0.02;
+                    cubes[i].rotation.z += 0.02;
+                }
+
+                composer.render(scene, camera);
+
+                stats.end();
+            }
+
+            // add a music player
+
+            let musicPlaying = false;
+
+            const music = document.querySelector("#music");
+
+            console.log("start");
+
+            // create an AudioListener and add it to the camera
+            const listener = new THREE.AudioListener();
+            camera.add(listener);
+
+            // create a global audio source
+            const sound = new THREE.Audio(listener);
+
+            // load a sound and set it as the Audio object's buffer
+            const audioLoader = new THREE.AudioLoader();
+            audioLoader.load("./music/synthetic.mp3", function (buffer) {
+                sound.setBuffer(buffer);
+                sound.setLoop(true);
+                sound.setVolume(0.5);
+
+                console.log("add a player");
+            });
+
+            console.log("end");
+
+            function musicPlay() {
+                if (!musicPlaying) {
+                    sound.play();
+                    musicPlaying = !musicPlaying;
+                    console.log("play");
+                } else {
+                    sound.pause();
+                    musicPlaying = !musicPlaying;
+                    console.log("pause");
+                }
+            }
+
+            music.addEventListener("click", musicPlay);
+        </script>
+    </body>
+</html>
