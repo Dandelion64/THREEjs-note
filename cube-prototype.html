@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>CUBE SELF 04 SMAA</title>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+        />
+        <link type="text/css" rel="stylesheet" href="reset.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@700;900&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            body {
+                background-color: #e1e4e5;
+            }
+
+            #navbar {
+                position: absolute;
+                width: 100%;
+                background-color: #999;
+                color: #fff;
+                text-align: center;
+                height: 50px;
+                line-height: 50px;
+            }
+
+            #music {
+                position: absolute;
+                right: 20px;
+                top: 0;
+                color: #66f;
+                cursor: pointer;
+            }
+
+            #container {
+                position: absolute;
+                width: 100%;
+                top: 50px;
+                bottom: 0px;
+            }
+
+            #myCanvas {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                /* right: 0; */
+                /* bottom: 0; */
+                margin: auto;
+            }
+
+            .shadow {
+                position: fixed;
+                background-color: #fff2;
+                width: 100%;
+                height: calc(100% - 50px);
+                z-index: 100000;
+                top: 50px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="shadow">
+
+        </div>
+        <canvas id="myCanvas"></canvas>
+        <div id="navbar">
+            NAVBAR
+            <div id="music">PLAY/PAUSE</div>
+        </div>
+        <div id="container"></div>
+
+        <!-- Import maps polyfill -->
+        <!-- Remove this when import maps will be widely supported -->
+        <script
+            async
+            src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"
+        ></script>
+
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "../build/three.module.js"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as THREE from "three";
+
+            import Stats from "./jsm/libs/stats.module.js";
+
+            import { EffectComposer } from "./jsm/postprocessing/EffectComposer.js";
+            import { RenderPass } from "./jsm/postprocessing/RenderPass.js";
+            import { SMAAPass } from "./jsm/postprocessing/SMAAPass.js";
+
+            //
+
+            // Ref: http://www.html5canvastutorials.com/tutorials/html5-canvas-wrap-text-tutorial/
+
+            const width = 512;
+            const height = 512;
+            // 和下面的 context.scale() 連動
+            // 畫更大的圖再縮放回來
+            const size = 512 * 32;
+
+            function wrapText(
+                context,
+                text,
+                x,
+                y,
+                account,
+                x2,
+                y2,
+                maxWidth,
+                lineHeight
+            ) {
+                const words = text.split("");
+                // console.log(words);
+                let line = "";
+
+                context.scale(32, 32);
+
+                for (let n = 0; n < words.length; n++) {
+                    let testLine = line + words[n];
+                    let metrics = context.measureText(testLine);
+                    // console.log(metrics);
+                    // console.log(metrics.width);
+                    let testWidth = metrics.width;
+                    if (testWidth > maxWidth && n > 0) {
+                        context.fillText(line, x, y);
+                        line = words[n];
+                        y += lineHeight;
+                    } else {
+                        line = testLine;
+                    }
+                }
+                context.fillText(line, x, y);
+
+                // context.font = "italic 900 24px 'Noto Sans JP', sans-serif";
+                context.font = "italic 900 32px 'Noto Sans TC', sans-serif";
+                context.fillText(account, x2, y2);
+
+                // console.log(canvas);
+                return canvas;
+            }
+
+            const canvas = document.getElementById("myCanvas");
+
+            canvas.width = canvas.height = size;
+
+            let context = canvas.getContext("2d");
+
+            // bold 30px Arial
+            // context.font = "700 48px 'Noto Sans JP', sans-serif";
+            context.font = "900 54px 'Noto Sans TC', sans-serif";
+
+            // context.fillStyle = "green";
+            // context.fillRect(0, 0, canvas.width, canvas.height);
+            // context.fillStyle = "#ffcccc";
+            // context.fillRect(40, 40, canvas.width - 80, canvas.height - 80);
+            context.fillStyle = "#0f1746";
+            context.textAlign = "left";
+            context.textBaseline = "alphabetic";
+
+            let maxWidth = 432;
+            let lineHeight = 60;
+            let x = 40;
+            let y = 100;
+            let x2 = 40;
+            let y2 = 462;
+            let account = "@" + "ShinderWife";
+            let text =
+                "下輩子也想當新德醬的老婆～";
+
+            wrapText(
+                context,
+                text,
+                x,
+                y,
+                account,
+                x2,
+                y2,
+                maxWidth,
+                lineHeight
+            );
+
+            //
+
+            let camera, scene, renderer, composer, stats;
+
+            let mouseY = 0;
+
+            init();
+            animate();
+
+            function init() {
+                const container = document.querySelector("#container");
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.body.appendChild(renderer.domElement);
+
+                stats = new Stats();
+                container.appendChild(stats.dom);
+
+                //
+
+                camera = new THREE.PerspectiveCamera(
+                    70,
+                    window.innerWidth / window.innerHeight,
+                    1,
+                    2000
+                );
+                camera.position.set(0, 200, 150);
+                camera.rotation.set(0, 0, 0);
+                camera.lookAt(0, 0, 0);
+
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xe1e4e5);
+
+                //
+
+                const dirLight = new THREE.DirectionalLight(0xf1f4f5, 1);
+                dirLight.position.set(0, 250, -100);
+                scene.add( dirLight );
+
+                //
+
+                // camera.lookAt(scene.position);
+                // console.log(scene.position);
+
+                const geometry = new THREE.BoxGeometry(128, 128, 128);
+
+                const texture = new THREE.TextureLoader().load(
+                    "./box/15_a.png"
+                );
+
+                texture.anisotropy = 4;
+                // texture.minFilter = THREE.NearestFilter;
+                texture.minFilter = THREE.LinearFilter;
+                texture.magFilter = THREE.LinearFilter;
+
+                const textureMix = new THREE.TextureLoader().load(
+                    "./box/15_b.png"
+                );
+
+                textureMix.anisotropy = 4;
+                textureMix.minFilter = THREE.LinearFilter;
+                textureMix.magFilter = THREE.LinearFilter;
+
+                const textureTop = new THREE.TextureLoader().load(
+                    "./box/15_t.png"
+                );
+
+                textureTop.anisotropy = 4;
+                textureTop.minFilter = THREE.LinearFilter;
+                textureTop.magFilter = THREE.LinearFilter;
+
+                const textureText = new THREE.CanvasTexture(canvas);
+
+                // textureText.repeat.set(4, 4);
+
+                textureText.anisotropy = 4;
+                textureText.minFilter = THREE.LinearFilter;
+                textureText.magFilter = THREE.LinearFilter;
+
+                const textureTransparent = new THREE.TextureLoader().load(
+                    "./box/n_tr.png"
+                );
+
+                const material = new THREE.MeshBasicMaterial({
+                    map: texture,
+                });
+
+                const materialMix = new THREE.MeshBasicMaterial({
+                    map: textureMix,
+                    transparent: true,
+                });
+
+                const materialText = new THREE.MeshBasicMaterial({
+                    map: textureText,
+                    transparent: true,
+                });
+
+                const materialTop = new THREE.MeshPhongMaterial({
+                    map: textureTop,
+                });
+
+                const materialTransparent = new THREE.MeshBasicMaterial({
+                    map: textureTransparent,
+                    transparent: true,
+                });
+
+                let materialsBottom = [];
+                materialsBottom.push(material);
+                materialsBottom.push(material);
+                materialsBottom.push(materialTop);
+                materialsBottom.push(materialTop);
+                materialsBottom.push(material);
+                materialsBottom.push(material);
+
+                let materialsTop = [];
+                materialsTop.push(materialMix);
+                materialsTop.push(materialMix);
+                materialsTop.push(materialTop);
+                materialsTop.push(materialTop);
+                materialsTop.push(materialMix);
+                materialsTop.push(materialMix);
+
+                let materialsText = [];
+                materialsText.push(materialTransparent);
+                materialsText.push(materialTransparent);
+                materialsText.push(materialText);
+                materialsText.push(materialText);
+                materialsText.push(materialTransparent);
+                materialsText.push(materialTransparent);
+
+                const mesh = new THREE.Mesh(geometry, materialsBottom);
+
+                const meshMix = new THREE.Mesh(geometry, materialsTop);
+
+                const meshText = new THREE.Mesh(geometry, materialsText);
+
+                scene.add(mesh);
+                scene.add(meshMix);
+                scene.add(meshText);
+
+                // postprocessing
+
+                composer = new EffectComposer(renderer);
+                composer.addPass(new RenderPass(scene, camera));
+
+                const pass = new SMAAPass(
+                    window.innerWidth * renderer.getPixelRatio(),
+                    window.innerHeight * renderer.getPixelRatio()
+                );
+                composer.addPass(pass);
+
+                window.addEventListener("resize", onWindowResize);
+            }
+
+            function onWindowResize() {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(width, height);
+                composer.setSize(width, height);
+            }
+
+            function onDocumentMouseMove(event) {
+                    mouseY = event.clientY;
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+
+                stats.begin();
+
+                camera.position.y =
+                    400 *
+                    Math.sin((mouseY - camera.position.y) * 0.00035 + 1);
+                // camera.position.y = 100 * Math.sin((mouseY - camera.position.y) * 0.001);
+                camera.position.z =
+                    400 *
+                    Math.cos((mouseY - camera.position.y) * 0.00035 + 1);
+                // camera.position.z = 100 * Math.cos((mouseY - camera.position.y) * 0.001);
+                camera.lookAt(0, 0, 0);
+
+                for (let i = 0; i < scene.children.length; i++) {
+                    const child = scene.children[i];
+
+                    child.rotation.y += 0.005;
+                }
+
+                composer.render(scene, camera);
+
+                stats.end();
+            }
+
+            document.addEventListener("mousemove", onDocumentMouseMove);
+
+            // add a music player
+
+            let musicPlaying = false;
+
+            const music = document.querySelector("#music");
+
+            console.log("start");
+
+            // create an AudioListener and add it to the camera
+            const listener = new THREE.AudioListener();
+            camera.add(listener);
+
+            // create a global audio source
+            const sound = new THREE.Audio(listener);
+
+            // load a sound and set it as the Audio object's buffer
+            const audioLoader = new THREE.AudioLoader();
+            // audioLoader.load("./music/synthetic.mp3", function (buffer) {
+            audioLoader.load("./music/discovery.mp3", function (buffer) {
+                sound.setBuffer(buffer);
+                sound.setLoop(true);
+                sound.setVolume(0.5);
+
+                console.log("add a player");
+            });
+
+            console.log("end");
+
+            function musicPlay() {
+                if (!musicPlaying) {
+                    sound.play();
+                    musicPlaying = !musicPlaying;
+                    console.log("play");
+                } else {
+                    sound.pause();
+                    musicPlaying = !musicPlaying;
+                    console.log("pause");
+                }
+            }
+
+            music.addEventListener("click", musicPlay);
+            music.addEventListener("touch", musicPlay);
+        </script>
+    </body>
+</html>
