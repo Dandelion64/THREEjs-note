@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>CUBE SELF 04 SMAA</title>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+        />
+        <link type="text/css" rel="stylesheet" href="./reset.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@700;900&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            /* body {
+                background-color: #e1e4e5;
+            } */
+
+            #myCanvas {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                /* right: 0; */
+                /* bottom: 0; */
+                margin: auto;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id="myCanvas"></canvas>
+
+        <!-- Import maps polyfill -->
+        <!-- Remove this when import maps will be widely supported -->
+        <script
+            async
+            src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"
+        ></script>
+
+        <!-- vertex shader -->
+        <script id="vertex-shader-2d" type="x-shader/x-vertex">
+            varying vec2 vUv;
+
+            void main() {
+                vUv = uv;
+                vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        </script>
+        <!-- fragment shader -->
+        <script id="fragment-shader-2d" type="x-shader/x-fragment">
+            #ifdef GL_ES
+                precision highp float;
+            #endif
+            
+            // our textures
+            uniform sampler2D textureOne;
+            uniform sampler2D textureTwo;
+            uniform sampler2D textureThree;
+            
+            varying vec2 vUv;
+            
+            // the texCoords passed in from the vertex shader.
+            varying vec2 v_texCoord;
+            
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vUv);
+                vec4 color1 = texture2D(textureTwo, vUv);
+                vec4 color2 = texture2D(textureThree, vUv);
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+        </script>
+
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "./build/three.module.js"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as THREE from "three";
+
+            import Stats from "./jsm/libs/stats.module.js";
+
+            import { EffectComposer } from "./jsm/postprocessing/EffectComposer.js";
+            import { RenderPass } from "./jsm/postprocessing/RenderPass.js";
+            import { SMAAPass } from "./jsm/postprocessing/SMAAPass.js";
+
+            //
+
+            // Ref: http://www.html5canvastutorials.com/tutorials/html5-canvas-wrap-text-tutorial/
+
+            const width = 512;
+            const height = 512;
+            // 和下面的 context.scale() 連動
+            // 畫更大的圖再縮放回來
+            const size = 512;
+
+            let camera, scene, renderer, composer, stats;
+
+            let uniformsPractice;
+
+            let text_a, text_b, text_c;
+
+            let plane;
+
+            let offset = 0;
+
+            const vertexShader = document.querySelector('#vertex-shader-2d').innerHTML;
+            const fragmentShader = document.querySelector('#fragment-shader-2d').innerHTML;
+
+            init();
+            animate();
+
+            function init() {
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.body.appendChild(renderer.domElement);
+
+                stats = new Stats();
+                document.body.appendChild(stats.dom);
+
+                //
+
+                camera = new THREE.PerspectiveCamera(
+                    70,
+                    window.innerWidth / window.innerHeight,
+                    1,
+                    2000
+                );
+                camera.position.set(0, 0, 400);
+                // camera.rotation.set(0, 0, 0);
+                // camera.lookAt(0, 0, 0);
+
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xe1e4e5);
+
+                //
+
+                // camera.lookAt(scene.position);
+                // console.log(scene.position);
+
+                // const geometry = new THREE.BoxGeometry(256, 256, 256);
+
+                // const texture = new THREE.TextureLoader().load(
+                //     "./box/0_a.png"
+                // );
+
+                // texture.anisotropy = 4;
+                // texture.minFilter = THREE.LinearFilter;
+                // texture.magFilter = THREE.LinearFilter;
+
+                // const textureMix = new THREE.TextureLoader().load(
+                //     "./box/0_b.png"
+                // );
+
+                // textureMix.anisotropy = 4;
+                // textureMix.minFilter = THREE.LinearFilter;
+                // textureMix.magFilter = THREE.LinearFilter;
+
+                // const textureTop = new THREE.TextureLoader().load(
+                //     "./box/0_t.png"
+                // );
+
+                // textureTop.anisotropy = 4;
+                // textureTop.minFilter = THREE.LinearFilter;
+                // textureTop.magFilter = THREE.LinearFilter;
+
+
+                // const textureTransparent = new THREE.TextureLoader().load(
+                //     "./box/n_tr.png"
+                // );
+
+                // const material = new THREE.MeshBasicMaterial({
+                //     map: texture,
+                // });
+
+                // const materialMix = new THREE.MeshBasicMaterial({
+                //     map: textureMix,
+                //     transparent: true,
+                // });
+
+                // const materialTransparent = new THREE.MeshBasicMaterial({
+                //     map: textureTransparent,
+                //     transparent: true,
+                // });
+
+                // const texture = new THREE.TextureLoader().load(
+                //     "./box/0_a.png"
+                // );
+
+                // texture.anisotropy = 4;
+                // texture.minFilter = THREE.LinearFilter;
+                // texture.magFilter = THREE.LinearFilter;
+
+                // const geometry = new THREE.PlaneGeometry(256, 256);
+                // // 這裡用 !0 表示 true
+                // const material =  new THREE.MeshBasicMaterial({
+                //     map: texture,
+                //     transparent: !0
+                // });
+
+                // 在這裡嘗試定義一種新的材質 Start
+
+                // Ref: https://juejin.cn/post/7067383666678169637
+
+                // Ref2: https://stackoverflow.com/questions/16287547/multiple-transparent-textures-on-the-same-mesh-face-in-three-js
+
+                text_a = new THREE.TextureLoader().load("./box/7_a.png");
+                text_a.anisotropy = 4;
+                text_a.minFilter = THREE.LinearFilter;
+                text_a.magFilter = THREE.LinearFilter;
+                text_a.wrapS = text_a.wrapT = THREE.RepeatWrapping;
+                text_a.needsUpdate = !0;
+                text_a.matrixAutoUpdate = true;
+                // text_a.offset.y = 0.5;
+                
+                text_b = new THREE.TextureLoader().load("./box/7_b.png");
+                text_b.anisotropy = 4;
+                text_b.minFilter = THREE.LinearFilter;
+                text_b.magFilter = THREE.LinearFilter;
+                text_b.wrapS = text_b.wrapT = THREE.RepeatWrapping;
+                text_b.needsUpdate = !0;
+                text_b.matrixAutoUpdate = true;
+                
+                text_c = new THREE.TextureLoader().load("./box/7_c.png");
+                text_c.anisotropy = 4;
+                text_c.minFilter = THREE.LinearFilter;
+                text_c.magFilter = THREE.LinearFilter;
+                text_c.wrapS = text_c.wrapT = THREE.RepeatWrapping;
+                text_c.needsUpdate = !0;
+                text_c.matrixAutoUpdate = true;
+
+                // 感覺不出 type 有什麼特別功能
+                uniformsPractice = {
+                    textureOne: {
+                        type: 't',
+                        value: text_a},
+                    textureTwo: {
+                        type: 't',
+                        value: text_b},
+                    textureThree: {
+                        type: 't',
+                        value: text_c}
+                };
+                
+
+                let materialPractice = new THREE.ShaderMaterial({
+                    uniforms: uniformsPractice,
+                    vertexShader: vertexShader,
+                    fragmentShader: fragmentShader
+                });
+
+                plane = new THREE.Mesh(new THREE.PlaneGeometry(256, 256), materialPractice);
+
+                // const plane = new THREE.Mesh(geometry, material);
+                // 將之設定為雙面
+                plane.material.side = THREE.DoubleSide;
+                plane.material.transparent = true;
+                plane.position.x = -260;
+                scene.add(plane);
+
+                // postprocessing
+
+                composer = new EffectComposer(renderer);
+                composer.addPass(new RenderPass(scene, camera));
+
+                const pass = new SMAAPass(
+                    window.innerWidth * renderer.getPixelRatio(),
+                    window.innerHeight * renderer.getPixelRatio()
+                );
+                composer.addPass(pass);
+
+                window.addEventListener("resize", onWindowResize);
+            }
+
+            function onWindowResize() {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(width, height);
+                composer.setSize(width, height);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                stats.begin();
+
+                //
+
+                // console.log(plane.material.uniforms.textureThree);
+
+                // plane.material.uniforms.textureThree.value.offset.y = offset;
+                // plane.material.map.needsUpdate = true;
+                // offset += 0.001;
+
+                // console.log(plane.material.uniforms.textureThree.value.offset);
+
+                //
+
+                composer.render(scene, camera);
+                stats.end();
+            }
+        </script>
+    </body>
+</html>
