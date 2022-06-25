@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- TODO: 修改素材 -->
+        <!-- TODO: 使用 TWEEN.JS 調整動畫 -->
+        <!-- TODO: 改成 React -->
+        <!-- TODO: 想一下要不要更改貼素材的方式 不要貼上下 改成貼左右再旋轉 -->
+        <!-- TODO: 想一下多顆方塊的 layout -->
+        <title>CUBE ANIMATION STYLE</title>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+        />
+        <link type="text/css" rel="stylesheet" href="./reset.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@700;900&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            /* body {
+                background-color: #e1e4e5;
+            } */
+
+            #myCanvas {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                /* right: 0; */
+                /* bottom: 0; */
+                margin: auto;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id="myCanvas"></canvas>
+
+        <!-- Import maps polyfill -->
+        <!-- Remove this when import maps will be widely supported -->
+        <script
+            async
+            src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"
+        ></script>
+
+        <!-- vertex shader -->
+        <script id="vertex-shader-2d" type="x-shader/x-vertex">
+            varying vec2 vUv;
+
+            void main() {
+                // vUv = vec2(uv.x*1.75, uv.y*1.25);
+                // vUv = vec2(uv.x, uv.y-0.5);
+                vUv =uv;
+                vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        </script>
+        <!-- fragment shader -->
+        <script id="fragment-shader-2d" type="x-shader/x-fragment">
+            #ifdef GL_ES
+                precision highp float;
+            #endif
+            
+            // our textures
+            uniform sampler2D textureOne;
+            uniform sampler2D textureTwo;
+            uniform sampler2D textureThree;
+            
+            varying vec2 vUv;
+
+            // time
+            uniform float time;
+            
+            // the texCoords passed in from the vertex shader.
+            varying vec2 v_texCoord;
+            
+            // animation 0
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x, vUv.y + time));
+                gl_FragColor = mix(color0, color1, color1.a);
+            }
+            */
+
+            // animation 1
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vUv);
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x, vUv.y - time));
+                gl_FragColor = mix(color0, color1, color1.a);
+            }
+            */
+
+            // animation 2
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x - time, vUv.y));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x + time, vUv.y));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 3
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x - time, vUv.y));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x, vUv.y + time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 4
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x - time, vUv.y + time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x + time, vUv.y + time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x - time, vUv.y - time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 5
+            // 這個不太對 要想想
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x + time, vUv.y + time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x - time, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x, vUv.y - time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 6
+            // 原本是左右 上下 兩種模式循環
+            // 但現在這樣也可以
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x - time, vUv.y + time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x - time, vUv.y - time));
+                gl_FragColor = mix(color0, color1, color1.a);
+            }
+            */
+
+            // animation 7
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x + time, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x - time, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x, vUv.y + time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 8
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x + time, vUv.y));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x - time, vUv.y));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 9
+            // 原本是手指收起和手指伸出交替 這部分必須要細調
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vUv);
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x + time, vUv.y));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x - time, vUv.y));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 10
+            // 這個動畫也要細調 時間差跟透明度
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x - time, vUv.y));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x - time, vUv.y));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x + time + 0.5, vUv.y));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 11
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x, vUv.y + time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x + time, vUv.y));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x - time, vUv.y));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 12
+            // 這個動畫要細調 有時間差跟跳動
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x, vUv.y + time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 13
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x, vUv.y + time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x, vUv.y + time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 14
+            // 這個動畫要細調 有時間差
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x + time, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x + time, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x - time, vUv.y + time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 15
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x + time, vUv.y));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x - time, vUv.y));
+                gl_FragColor = mix(color0, color1, color1.a);
+            }
+            */
+
+            // animation 16
+            // 目前已經可以了 可以考慮加上時間差
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x + time, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x + time, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x + time, vUv.y - time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 17
+            // 這動畫還要細修 有時間差
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x + time, vUv.y));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 18
+            // 有改進的空間 不過已經可以了
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x + time, vUv.y));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x - time, vUv.y));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x, vUv.y - time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 19
+            // 這動畫必須細修 有透明度
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vUv);
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x - time, vUv.y));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x + time, vUv.y));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 20
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x - time, vUv.y));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x, vUv.y + time));
+                gl_FragColor = mix(color0, color1, color1.a);
+            }
+            */
+
+            // animation 21
+            // 這動畫少一層 可以視情況決定要不會補上
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x - time, vUv.y + time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x - time, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vUv);
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 22
+            // 這個模式會刮眼睛 不能解決就不要用
+            // 原網址也會刮 他只是比較快
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x - time, vUv.y));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x + time, vUv.y));
+                gl_FragColor = mix(color0, color1, color1.a);
+            }
+            */
+
+            // animation 23
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x - time, vUv.y + time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x - time, vUv.y - time));
+                gl_FragColor = mix(color0, color1, color1.a);
+            }
+            */
+
+            // animation 24
+            // 這張圖少嘴巴 可以視情況決定要不要補上
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x + time, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x - time, vUv.y - time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 25
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x, vUv.y + time));
+                gl_FragColor = mix(color0, color1, color1.a);
+            }
+            */
+
+            // animation 26
+            // 單面素材 跳過
+
+            // animation 27
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x + time, vUv.y + time));
+                gl_FragColor = color0;
+            }
+            */
+
+            // animation 28
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x + time, vUv.y));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x - time, vUv.y));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 29
+            // 單面素材 跳過
+
+            // animation 30
+            // 這效果也蠻酷 註解一份
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x, vUv.y + time));
+                gl_FragColor = mix(color0, color1, color1.a);
+            }
+            */
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x + time, vUv.y + time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x - time, vUv.y - time));
+                gl_FragColor = mix(color0, color1, color1.a);
+            }
+            */
+
+            // animation 31
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x, vUv.y + time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 32
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x, vUv.y + time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x, vUv.y + time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 33
+            // 單面素材 跳過
+
+            // animation 34
+            // 這張圖少一個素材 右上三角 可以是情況決定要不要補上
+            // 也可以考慮修改素材變成三張圖喔
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x + time, vUv.y));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x, vUv.y + time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 35
+            // 這張圖少一個素材 可以視情況決定要不要補
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x + time, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x + time, vUv.y + time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            // animation 36
+            // 單面素材 跳過
+
+            // animation 37
+            // 這效果也不錯 註解一份留著
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x + time, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x + time, vUv.y + time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+
+            //  37 是循環動畫 帶有時間差操作 先跳過
+
+            /*
+            void main(void) {
+                vec4 color0 = texture2D(textureOne, vec2(vUv.x + time, vUv.y - time));
+                vec4 color1 = texture2D(textureTwo, vec2(vUv.x - time, vUv.y - time));
+                vec4 color2 = texture2D(textureThree, vec2(vUv.x, vUv.y + time));
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+            }
+            */
+        </script>
+
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "./build/three.module.js"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as THREE from "three";
+
+            import Stats from "./jsm/libs/stats.module.js";
+
+            import { EffectComposer } from "./jsm/postprocessing/EffectComposer.js";
+            import { RenderPass } from "./jsm/postprocessing/RenderPass.js";
+            import { SMAAPass } from "./jsm/postprocessing/SMAAPass.js";
+
+            //
+
+            // Ref: http://www.html5canvastutorials.com/tutorials/html5-canvas-wrap-text-tutorial/
+
+            const width = 512;
+            const height = 512;
+            // 和下面的 context.scale() 連動
+            // 畫更大的圖再縮放回來
+            const size = 512;
+
+            let camera, scene, renderer, composer, stats;
+
+            let uniformsPractice;
+
+            let text_a, text_b, text_c;
+
+            let plane;
+
+            let mesh;
+
+            // let offset = 0;
+
+            let cubeAnimation = false;
+
+            const vertexShader = document.querySelector('#vertex-shader-2d').innerHTML;
+            const fragmentShader = document.querySelector('#fragment-shader-2d').innerHTML;
+
+            init();
+            animate();
+
+            function init() {
+
+                renderer = new THREE.WebGLRenderer();
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.body.appendChild(renderer.domElement);
+
+                stats = new Stats();
+                document.body.appendChild(stats.dom);
+
+                //
+
+                camera = new THREE.PerspectiveCamera(
+                    70,
+                    window.innerWidth / window.innerHeight,
+                    1,
+                    2000
+                );
+                camera.position.set(0, 0, 500);
+                // camera.rotation.set(0, 0, 0);
+                // camera.lookAt(0, 0, 0);
+
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xe1e4e5);
+
+                //
+
+                // camera.lookAt(scene.position);
+                // console.log(scene.position);
+
+                // const geometry = new THREE.BoxGeometry(256, 256, 256);
+
+                // const texture = new THREE.TextureLoader().load(
+                //     "./box/0_a.png"
+                // );
+
+                // texture.anisotropy = 4;
+                // texture.minFilter = THREE.LinearFilter;
+                // texture.magFilter = THREE.LinearFilter;
+
+                // const textureMix = new THREE.TextureLoader().load(
+                //     "./box/0_b.png"
+                // );
+
+                // textureMix.anisotropy = 4;
+                // textureMix.minFilter = THREE.LinearFilter;
+                // textureMix.magFilter = THREE.LinearFilter;
+
+                // const textureTop = new THREE.TextureLoader().load(
+                //     "./box/0_t.png"
+                // );
+
+                // textureTop.anisotropy = 4;
+                // textureTop.minFilter = THREE.LinearFilter;
+                // textureTop.magFilter = THREE.LinearFilter;
+
+
+                // const textureTransparent = new THREE.TextureLoader().load(
+                //     "./box/n_tr.png"
+                // );
+
+                // const material = new THREE.MeshBasicMaterial({
+                //     map: texture,
+                // });
+
+                // const materialMix = new THREE.MeshBasicMaterial({
+                //     map: textureMix,
+                //     transparent: true,
+                // });
+
+                // const materialTransparent = new THREE.MeshBasicMaterial({
+                //     map: textureTransparent,
+                //     transparent: true,
+                // });
+
+                // const texture = new THREE.TextureLoader().load(
+                //     "./box/0_a.png"
+                // );
+
+                // texture.anisotropy = 4;
+                // texture.minFilter = THREE.LinearFilter;
+                // texture.magFilter = THREE.LinearFilter;
+
+                // const geometry = new THREE.PlaneGeometry(256, 256);
+                // // 這裡用 !0 表示 true
+                // const material =  new THREE.MeshBasicMaterial({
+                //     map: texture,
+                //     transparent: !0
+                // });
+
+                // 在這裡嘗試定義一種新的材質 Start
+
+                // Ref: https://juejin.cn/post/7067383666678169637
+
+                // Ref2: https://stackoverflow.com/questions/16287547/multiple-transparent-textures-on-the-same-mesh-face-in-three-js
+
+                text_a = new THREE.TextureLoader().load("./box/37_a.png");
+                text_a.anisotropy = 4;
+                text_a.minFilter = THREE.LinearFilter;
+                text_a.magFilter = THREE.LinearFilter;
+                text_a.wrapS = text_a.wrapT = THREE.RepeatWrapping;
+                // text_a.wrapS = text_a.wrapT = THREE.ClampToEdgeWrapping;
+                // text_a.needsUpdate = true;
+                // text_a.matrixAutoUpdate = true;
+                // text_a.offset.y = 0.5;
+                
+                text_b = new THREE.TextureLoader().load("./box/37_b.png");
+                text_b.anisotropy = 4;
+                text_b.minFilter = THREE.LinearFilter;
+                text_b.magFilter = THREE.LinearFilter;
+                text_b.wrapS = text_b.wrapT = THREE.RepeatWrapping;
+                // text_b.wrapS = text_b.wrapT = THREE.ClampToEdgeWrapping;
+                // text_b.needsUpdate = true;
+                // text_b.matrixAutoUpdate = true;
+                
+                text_c = new THREE.TextureLoader().load("./box/37_c.png");
+                text_c.anisotropy = 4;
+                text_c.minFilter = THREE.LinearFilter;
+                text_c.magFilter = THREE.LinearFilter;
+                text_c.wrapS = text_c.wrapT = THREE.RepeatWrapping;
+                // text_c.needsUpdate = true;
+                // text_c.matrixAutoUpdate = true;
+
+                let text_t = new THREE.TextureLoader().load("./box/37_t.png");
+                text_t.anisotropy = 4;
+                text_t.minFilter = THREE.LinearFilter;
+                text_t.magFilter = THREE.LinearFilter;
+
+                const materialT = new THREE.MeshBasicMaterial({
+                    map: text_t,
+                    transparent: true,
+                });
+
+                // 感覺不出 type 有什麼特別功能
+                uniformsPractice = {
+                    time: {
+                        value: 1.0
+                    },
+                    textureOne: {
+                        type: 't',
+                        value: text_a
+                    },
+                    textureTwo: {
+                        type: 't',
+                        value: text_b
+                    },
+                    textureThree: {
+                        type: 't',
+                        value: text_c
+                    }
+                };
+                
+
+                let materialPractice = new THREE.ShaderMaterial({
+                    uniforms: uniformsPractice,
+                    vertexShader: vertexShader,
+                    fragmentShader: fragmentShader,
+                    // alphaToCoverage: true
+                    // uniformsNeedUpdate: true
+                    transparent: !0
+                });
+
+                let materialAnim = [];
+                materialAnim.push(materialPractice);
+                materialAnim.push(materialPractice);
+                materialAnim.push(materialT);
+                materialAnim.push(materialT);
+                materialAnim.push(materialPractice);
+                materialAnim.push(materialPractice);
+                // materialAnim
+
+                // plane = new THREE.Mesh(new THREE.PlaneGeometry(256, 256), materialPractice);
+
+                // const plane = new THREE.Mesh(geometry, material);
+                // 將之設定為雙面
+                // plane.material.side = THREE.DoubleSide;
+                // plane.material.transparent = true;
+                // plane.position.x = -260;
+                // scene.add(plane);
+                
+                const geometry = new THREE.BoxGeometry(256, 256, 256);
+                
+                // mesh = new THREE.Mesh(geometry, materialPractice);
+                mesh = new THREE.Mesh(geometry, materialAnim);
+                // mesh.material.transparent = true;
+                // mesh.material.needsUpdate = true;
+                // mesh.material.uniformsNeedUpdate = true;
+
+                scene.add(mesh);
+
+                // postprocessing
+
+                composer = new EffectComposer(renderer);
+                composer.addPass(new RenderPass(scene, camera));
+
+                const pass = new SMAAPass(
+                    window.innerWidth * renderer.getPixelRatio(),
+                    window.innerHeight * renderer.getPixelRatio()
+                );
+                composer.addPass(pass);
+
+                window.addEventListener("resize", onWindowResize);
+            }
+
+            function onWindowResize() {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(width, height);
+                composer.setSize(width, height);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                stats.begin();
+
+                //
+
+                // console.log(plane.material.uniforms.textureThree);
+
+                // plane.material.uniforms.textureThree.value.offset.y = offset;
+                // plane.material.map.needsUpdate = true;
+                // offset += 0.001;
+
+                // console.log(plane.material.uniforms.textureThree.value.offset);
+
+                //
+                
+                mesh.rotation.x = -100;
+                // mesh.rotation.y = -100;
+                // mesh.rotation.x += 0.005;
+                // mesh.rotation.y += 0.005;
+                // mesh.rotation.z += 0.005;
+                // mesh.material.opacity -= 0.01;
+
+                if (!cubeAnimation) {
+                    mesh.material[0].uniforms.time.value -= 0.008;
+                    mesh.material[1].uniforms.time.value -= 0.008;
+                    mesh.material[4].uniforms.time.value -= 0.008;
+                    mesh.material[5].uniforms.time.value -= 0.008;
+                    if (mesh.material[5].uniforms.time.value < 0.008) {
+                        mesh.material[0].uniforms.time.value = 1.0;
+                        mesh.material[1].uniforms.time.value = 1.0;
+                        mesh.material[4].uniforms.time.value = 1.0;
+                        mesh.material[5].uniforms.time.value = 1.0;
+                        cubeAnimation = !cubeAnimation;
+                        
+                        setTimeout (() => {
+                            cubeAnimation = !cubeAnimation;
+                        }, 750)
+                    }
+                }
+
+                // console.log(mesh.material.opacity);
+                // console.log(mesh.material);
+
+                composer.render(scene, camera);
+                stats.end();
+            }
+        </script>
+    </body>
+</html>
