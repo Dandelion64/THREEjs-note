@@ -67,20 +67,20 @@
             #ifdef GL_ES
                 precision highp float;
             #endif
-            
+
             // our textures
             uniform sampler2D textureOne;
             uniform sampler2D textureTwo;
             uniform sampler2D textureThree;
-            
+
             varying vec2 vUv;
 
             // time
             uniform float time;
-            
+
             // the texCoords passed in from the vertex shader.
             varying vec2 v_texCoord;
-            
+
             // animation 0
             /*
             void main(void) {
@@ -279,14 +279,14 @@
 
             // animation 19
             // 這動畫必須細修 有透明度
-            /*
+
             void main(void) {
                 vec4 color0 = texture2D(textureOne, vUv);
                 vec4 color1 = texture2D(textureTwo, vec2(vUv.x - time, vUv.y));
                 vec4 color2 = texture2D(textureThree, vec2(vUv.x + time, vUv.y));
-                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
+                gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a * sin(radians(time * 180.0)));
             }
-            */
+
 
             // animation 20
             /*
@@ -440,14 +440,14 @@
 
             // animation 37
             // 這效果也不錯 註解一份留著
-            
+            /*
             void main(void) {
                 vec4 color0 = texture2D(textureOne, vec2(vUv.x, vUv.y - time));
                 vec4 color1 = texture2D(textureTwo, vec2(vUv.x + time, vUv.y - time));
                 vec4 color2 = texture2D(textureThree, vec2(vUv.x + time, vUv.y + time));
                 gl_FragColor = mix(mix(color0, color1, color1.a),color2, color2.a);
             }
-
+            */
             //  37 是循環動畫 帶有時間差操作 先跳過
 
             /*
@@ -497,18 +497,22 @@
 
             let mesh;
 
+            let mouseY = 0;
+
             // let offset = 0;
 
             let cubeAnimation = false;
 
-            const vertexShader = document.querySelector('#vertex-shader-2d').innerHTML;
-            const fragmentShader = document.querySelector('#fragment-shader-2d').innerHTML;
+            const vertexShader =
+                document.querySelector("#vertex-shader-2d").innerHTML;
+            const fragmentShader = document.querySelector(
+                "#fragment-shader-2d"
+            ).innerHTML;
 
             init();
             animate();
 
             function init() {
-
                 renderer = new THREE.WebGLRenderer();
                 renderer.setPixelRatio(window.devicePixelRatio);
                 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -525,12 +529,18 @@
                     1,
                     2000
                 );
-                camera.position.set(0, 0, 500);
-                // camera.rotation.set(0, 0, 0);
-                // camera.lookAt(0, 0, 0);
+                camera.position.set(0, 200, 150);
+                camera.rotation.set(0, 0, 0);
+                camera.lookAt(0, 0, 0);
 
                 scene = new THREE.Scene();
                 scene.background = new THREE.Color(0xe1e4e5);
+
+                //
+
+                const dirLight = new THREE.DirectionalLight(0xf1f4f5, 1);
+                dirLight.position.set(0, 1000, 0);
+                scene.add(dirLight);
 
                 //
 
@@ -562,7 +572,6 @@
                 // textureTop.anisotropy = 4;
                 // textureTop.minFilter = THREE.LinearFilter;
                 // textureTop.magFilter = THREE.LinearFilter;
-
 
                 // const textureTransparent = new THREE.TextureLoader().load(
                 //     "./box/n_tr.png"
@@ -603,7 +612,7 @@
 
                 // Ref2: https://stackoverflow.com/questions/16287547/multiple-transparent-textures-on-the-same-mesh-face-in-three-js
 
-                text_a = new THREE.TextureLoader().load("./box/37_a.png");
+                text_a = new THREE.TextureLoader().load("./box/19_a.png");
                 text_a.anisotropy = 4;
                 text_a.minFilter = THREE.LinearFilter;
                 text_a.magFilter = THREE.LinearFilter;
@@ -612,8 +621,8 @@
                 // text_a.needsUpdate = true;
                 // text_a.matrixAutoUpdate = true;
                 // text_a.offset.y = 0.5;
-                
-                text_b = new THREE.TextureLoader().load("./box/37_b.png");
+
+                text_b = new THREE.TextureLoader().load("./box/19_b.png");
                 text_b.anisotropy = 4;
                 text_b.minFilter = THREE.LinearFilter;
                 text_b.magFilter = THREE.LinearFilter;
@@ -621,8 +630,8 @@
                 // text_b.wrapS = text_b.wrapT = THREE.ClampToEdgeWrapping;
                 // text_b.needsUpdate = true;
                 // text_b.matrixAutoUpdate = true;
-                
-                text_c = new THREE.TextureLoader().load("./box/37_c.png");
+
+                text_c = new THREE.TextureLoader().load("./box/19_c.png");
                 text_c.anisotropy = 4;
                 text_c.minFilter = THREE.LinearFilter;
                 text_c.magFilter = THREE.LinearFilter;
@@ -630,12 +639,12 @@
                 // text_c.needsUpdate = true;
                 // text_c.matrixAutoUpdate = true;
 
-                let text_t = new THREE.TextureLoader().load("./box/37_t.png");
+                let text_t = new THREE.TextureLoader().load("./box/19_t.png");
                 text_t.anisotropy = 4;
                 text_t.minFilter = THREE.LinearFilter;
                 text_t.magFilter = THREE.LinearFilter;
 
-                const materialT = new THREE.MeshBasicMaterial({
+                const materialT = new THREE.MeshPhongMaterial({
                     map: text_t,
                     transparent: true,
                 });
@@ -643,22 +652,21 @@
                 // 感覺不出 type 有什麼特別功能
                 uniformsPractice = {
                     time: {
-                        value: 1.0
+                        value: 1.0,
                     },
                     textureOne: {
-                        type: 't',
-                        value: text_a
+                        type: "t",
+                        value: text_a,
                     },
                     textureTwo: {
-                        type: 't',
-                        value: text_b
+                        type: "t",
+                        value: text_b,
                     },
                     textureThree: {
-                        type: 't',
-                        value: text_c
-                    }
+                        type: "t",
+                        value: text_c,
+                    },
                 };
-                
 
                 let materialPractice = new THREE.ShaderMaterial({
                     uniforms: uniformsPractice,
@@ -666,7 +674,7 @@
                     fragmentShader: fragmentShader,
                     // alphaToCoverage: true
                     // uniformsNeedUpdate: true
-                    transparent: !0
+                    transparent: !0,
                 });
 
                 let materialAnim = [];
@@ -686,9 +694,9 @@
                 // plane.material.transparent = true;
                 // plane.position.x = -260;
                 // scene.add(plane);
-                
-                const geometry = new THREE.BoxGeometry(256, 256, 256);
-                
+
+                const geometry = new THREE.BoxBufferGeometry(128, 128, 128);
+
                 // mesh = new THREE.Mesh(geometry, materialPractice);
                 mesh = new THREE.Mesh(geometry, materialAnim);
                 // mesh.material.transparent = true;
@@ -737,8 +745,8 @@
                 // console.log(plane.material.uniforms.textureThree.value.offset);
 
                 //
-                
-                mesh.rotation.x = -100;
+
+                // mesh.rotation.x = -100;
                 // mesh.rotation.y = -100;
                 // mesh.rotation.x += 0.005;
                 // mesh.rotation.y += 0.005;
@@ -756,12 +764,22 @@
                         mesh.material[4].uniforms.time.value = 1.0;
                         mesh.material[5].uniforms.time.value = 1.0;
                         cubeAnimation = !cubeAnimation;
-                        
-                        setTimeout (() => {
+
+                        setTimeout(() => {
                             cubeAnimation = !cubeAnimation;
-                        }, 750)
+                        }, 750);
                     }
                 }
+
+                camera.position.y =
+                    250 *
+                    Math.sin((mouseY - camera.position.y) * 0.00035 + 0.8);
+                // camera.position.y = 100 * Math.sin((mouseY - camera.position.y) * 0.001);
+                camera.position.z =
+                    250 *
+                    Math.cos((mouseY - camera.position.y) * 0.00035 + 0.8);
+                // camera.position.z = 100 * Math.cos((mouseY - camera.position.y) * 0.001);
+                camera.lookAt(0, 0, 0);
 
                 // console.log(mesh.material.opacity);
                 // console.log(mesh.material);
@@ -769,6 +787,12 @@
                 composer.render(scene, camera);
                 stats.end();
             }
+
+            function onDocumentMouseMove(event) {
+                    mouseY = event.clientY;
+            }
+
+            document.addEventListener("mousemove", onDocumentMouseMove);
         </script>
     </body>
 </html>
