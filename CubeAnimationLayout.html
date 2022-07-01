@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <!-- TODO: 修改素材 -->
+        <!-- TODO: 改成 React -->
+        <!-- TODO: 想一下要不要更改貼素材的方式 不要貼上下 改成貼左右再旋轉 -->
+        <!-- TODO: 想一下多顆方塊的 layout -->
+        <!-- TODO: 考慮把 easing function 移到 shader 裏面 -->
+        <!-- Ref: https://github.com/nicolausYes/easing-functions -->
+        <!-- TODO: 寫成 generator function -->
+
+        <title>CUBE ANIMATION STYLE</title>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+        />
+        <link type="text/css" rel="stylesheet" href="./reset.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@700;900&display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            body {
+                background-image: url(./Background-try-b.png);
+                /* background-image: linear-gradient(180deg, #E5E7EF, #DBE0ED); */
+                background-size: cover;
+                background-position: center 0;
+                /* opacity: 0.1; */
+            }
+
+            #myCanvas {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                /* right: 0; */
+                /* bottom: 0; */
+                margin: auto;
+                opacity: 1;
+            }
+
+            .screenShadow {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background-color: #e1e4e52f;
+                opacity: 1;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas id="myCanvas"></canvas>
+        <div class="screenShadow"></div>
+
+        <script src="./shader/vertex-shader.js"></script>
+        <script src="./shader/fragment-shader-00.js"></script>
+        <script src="./shader/fragment-shader-01.js"></script>
+        <script src="./shader/fragment-shader-02.js"></script>
+        <script src="./shader/fragment-shader-03.js"></script>
+        <script src="./shader/fragment-shader-04.js"></script>
+        <script src="./shader/fragment-shader-05.js"></script>
+        <script src="./shader/fragment-shader-06.js"></script>
+        <script src="./shader/fragment-shader-07.js"></script>
+        <script src="./shader/fragment-shader-08.js"></script>
+        <script src="./shader/fragment-shader-09.js"></script>
+        <script src="./shader/fragment-shader-10.js"></script>
+        <script src="./shader/fragment-shader-11.js"></script>
+        <script src="./shader/fragment-shader-12.js"></script>
+        <script src="./shader/fragment-shader-13.js"></script>
+        <script src="./shader/fragment-shader-14.js"></script>
+        <script src="./shader/fragment-shader-15.js"></script>
+        <script src="./shader/fragment-shader-16.js"></script>
+        <script src="./shader/fragment-shader-17.js"></script>
+        <script src="./shader/fragment-shader-18.js"></script>
+        <script src="./shader/fragment-shader-19.js"></script>
+        <script src="./shader/fragment-shader-20.js"></script>
+        <script src="./shader/fragment-shader-21.js"></script>
+        <script src="./shader/fragment-shader-22.js"></script>
+        <script src="./shader/fragment-shader-23.js"></script>
+        <script src="./shader/fragment-shader-24.js"></script>
+        <script src="./shader/fragment-shader-25.js"></script>
+
+        <!-- 單面素材 跳過 -->
+        <!-- <script src="./shader/fragment-shader-26.js"></script> -->
+        
+        <script src="./shader/fragment-shader-27.js"></script>
+        <script src="./shader/fragment-shader-28.js"></script>
+
+        <!-- 單面素材 跳過 -->
+        <!-- <script src="./shader/fragment-shader-29.js"></script> -->
+
+        <script src="./shader/fragment-shader-30.js"></script>
+        <script src="./shader/fragment-shader-31.js"></script>
+        <script src="./shader/fragment-shader-32.js"></script>
+
+        <!-- 單面素材 跳過 -->
+        <!-- <script src="./shader/fragment-shader-33.js"></script> -->
+
+        <script src="./shader/fragment-shader-34.js"></script>
+        <script src="./shader/fragment-shader-35.js"></script>
+        
+        <!-- 單面素材 跳過 -->
+        <!-- <script src="./shader/fragment-shader-36.js"></script> -->
+        
+        <script src="./shader/fragment-shader-37.js"></script>
+
+        <!-- Import maps polyfill -->
+        <!-- Remove this when import maps will be widely supported -->
+        <script
+            async
+            src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"
+        ></script>
+
+        <script type="importmap">
+            {
+                "imports": {
+                    "three": "./build/three.module.js"
+                }
+            }
+        </script>
+
+        <script type="module">
+            import * as THREE from "three";
+            import Stats from "./jsm/libs/stats.module.js";
+            import { EffectComposer } from "./jsm/postprocessing/EffectComposer.js";
+            import { RenderPass } from "./jsm/postprocessing/RenderPass.js";
+            import { SMAAPass } from "./jsm/postprocessing/SMAAPass.js";
+
+            import { gsap } from "./gsap-public/esm/all.js"
+
+            const width = 512;
+            const height = 512;
+            // 和下面的 context.scale() 連動
+            // 畫更大的圖再縮放回來
+            const size = 512;
+            const cubeSize = 96;
+
+            const imgID = 0; 
+            const animationType = imgID;
+
+            const fragmentShaderObj = {
+                'f0': fragmentShader00(),
+                'f1': fragmentShader01(),
+                'f2': fragmentShader02(),
+                'f3': fragmentShader03(),
+                'f4': fragmentShader04(),
+                'f5': fragmentShader05(),
+                'f6': fragmentShader06(),
+                'f7': fragmentShader07(),
+                'f8': fragmentShader08(),
+                'f9': fragmentShader09(),
+                'f10': fragmentShader10(),
+                'f11': fragmentShader11(),
+                'f12': fragmentShader12(),
+                'f13': fragmentShader13(),
+                'f14': fragmentShader14(),
+                'f15': fragmentShader15(),
+                'f16': fragmentShader16(),
+                'f17': fragmentShader17(),
+                'f18': fragmentShader18(),
+                'f19': fragmentShader19(),
+                'f20': fragmentShader20(),
+                'f21': fragmentShader21(),
+                'f22': fragmentShader22(),
+                'f23': fragmentShader23(),
+                'f24': fragmentShader24(),
+                'f25': fragmentShader25(),
+                'f27': fragmentShader27(),
+                'f28': fragmentShader28(),
+                'f30': fragmentShader30(),
+                'f31': fragmentShader31(),
+                'f32': fragmentShader32(),
+                'f34': fragmentShader34(),
+                'f35': fragmentShader35(),
+                'f37': fragmentShader37()
+            }
+
+            let camera, scene, renderer, composer, stats;
+
+            let group;
+
+            let uniformsPractice;
+            let text_a, text_b, text_c, text_d;
+            let mesh;
+
+            let mesh_2, mesh_3, mesh_4, mesh_5, mesh_6, mesh_7, mesh_8, mesh_9, mesh_10, mesh_11, mesh_12, mesh_13, mesh_14, mesh_15, mesh_16, mesh_17, mesh_18, mesh_19, mesh_20, mesh_21, mesh_22, mesh_23, mesh_24, mesh_25, mesh_26, mesh_27;
+
+            let mouseY = 0;
+
+            let cubeAnimation = false;
+
+            init();
+            animate();
+
+            function init() {
+                renderer = new THREE.WebGLRenderer({alpha: true});
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.body.appendChild(renderer.domElement);
+
+                stats = new Stats();
+                document.body.appendChild(stats.dom);
+
+                //
+
+                const body = document.querySelector('body')
+                const aspect = body.clientWidth / body.clientHeight;
+
+                camera = new THREE.OrthographicCamera(
+                    (size * aspect) / -2,
+                    (size * aspect) / 2,
+                    size / 2,
+                    size / -2,
+                    -1000,
+                    1000
+                );
+
+                camera.position.set(0, 0, 0);
+                // camera.position.set(0, 200, 150);
+                // camera.rotation.set(0, 0, -Math.PI/16);
+                // camera.lookAt(0, 0, 0);
+
+                scene = new THREE.Scene();
+                // scene.background = new THREE.Color(0x000000, 0);
+
+                const dirLightTop = new THREE.DirectionalLight(0xf1f4f5, 1);
+                const dirLightBottom = new THREE.DirectionalLight(0xf1f4f5, 1);
+                dirLightTop.position.set(0, 400, 0);
+                dirLightBottom.position.set(0, -400, 0);
+                scene.add(dirLightTop);
+                scene.add(dirLightBottom);
+
+                text_a = new THREE.TextureLoader().load(`./box/${imgID}_a.png`);
+                text_a.anisotropy = 4;
+                text_a.minFilter = THREE.LinearFilter;
+                text_a.magFilter = THREE.LinearFilter;
+                text_a.wrapS = text_a.wrapT = THREE.RepeatWrapping;
+
+                text_b = new THREE.TextureLoader().load(`./box/${imgID}_b.png`);
+                text_b.anisotropy = 4;
+                text_b.minFilter = THREE.LinearFilter;
+                text_b.magFilter = THREE.LinearFilter;
+                text_b.wrapS = text_b.wrapT = THREE.RepeatWrapping;
+
+                text_c = new THREE.TextureLoader().load(`./box/${imgID}_c.png`);
+                text_c.anisotropy = 4;
+                text_c.minFilter = THREE.LinearFilter;
+                text_c.magFilter = THREE.LinearFilter;
+                text_c.wrapS = text_c.wrapT = THREE.RepeatWrapping;
+                
+                text_d = new THREE.TextureLoader().load(`./box/${imgID}_d.png`);
+                text_d.anisotropy = 4;
+                text_d.minFilter = THREE.LinearFilter;
+                text_d.magFilter = THREE.LinearFilter;
+                // 21 這張不重複
+                text_d.wrapS = text_d.wrapT = THREE.RepeatWrapping;
+
+                let text_t = new THREE.TextureLoader().load(`./box/${imgID}_t.png`);
+                text_t.anisotropy = 4;
+                text_t.minFilter = THREE.LinearFilter;
+                text_t.magFilter = THREE.LinearFilter;
+
+                // Phong
+                const materialT = new THREE.MeshBasicMaterial({
+                    map: text_t,
+                    transparent: true,
+                });
+
+                // 感覺不出 type 有什麼特別功能
+                uniformsPractice = {
+                    none_time: {
+                        value: 1.0
+                    },
+                    power2_time: {
+                        value: 1.0
+                    },
+                    power3_time: {
+                        value: 1.0
+                    },
+                    power4_time: {
+                        value: 1.0
+                    },
+                    elastic_time: {
+                        value: 1.0
+                    },
+                    elastic_drastic_time: {
+                        value: 1.0
+                    },
+                    circ_in_time: {
+                        value: 1.0
+                    },
+                    circ_time: {
+                        value: 1.0
+                    },
+                    expo_time: {
+                        value: 1.0
+                    },
+                    animate: {
+                        value: 1.0
+                    },
+                    textureOne: {
+                        type: "t",
+                        value: text_a,
+                    },
+                    textureTwo: {
+                        type: "t",
+                        value: text_b,
+                    },
+                    textureThree: {
+                        type: "t",
+                        value: text_c,
+                    },
+                    textureFour: {
+                        type: "t",
+                        value: text_d,
+                    },
+                };
+
+                // 可以考慮包成 object
+                // Obj = {
+                    // f1: myFunc1();
+                    // f2: myFunc2();
+                // }
+
+                let materialPractice = new THREE.ShaderMaterial({
+                    uniforms: uniformsPractice,
+                    vertexShader: vertexShader(),
+                    fragmentShader: fragmentShaderObj[`f${imgID}`],
+                    transparent: !0,
+                });
+
+                let materialAnim = [];
+                materialAnim.push(materialPractice);
+                materialAnim.push(materialPractice);
+                materialAnim.push(materialT);
+                materialAnim.push(materialT);
+                materialAnim.push(materialPractice);
+                materialAnim.push(materialPractice);
+
+                // const geometry = new THREE.BoxBufferGeometry(128, 128, 128);
+                const geometry = new THREE.BoxBufferGeometry(cubeSize, cubeSize, cubeSize);
+
+                mesh = new THREE.Mesh(geometry, materialAnim);
+                
+                group = new THREE.Group();
+
+                group.add(mesh);
+
+                group.add(mesh_2);
+
+                scene.add(group);
+                
+                // postprocessing
+
+                composer = new EffectComposer(renderer);
+                composer.addPass(new RenderPass(scene, camera));
+
+                const pass = new SMAAPass(
+                    window.innerWidth * renderer.getPixelRatio(),
+                    window.innerHeight * renderer.getPixelRatio()
+                );
+                composer.addPass(pass);
+
+                window.addEventListener("resize", onWindowResize);
+            }
+
+            function onWindowResize() {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(width, height);
+                composer.setSize(width, height);
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                stats.begin();
+
+                mesh.rotation.x += 0.005;
+                mesh.rotation.y += 0.005;
+                mesh.rotation.z += 0.005;
+                // mesh_2.rotation.y -= 0.005;
+                // mesh_3.rotation.y -= 0.005;
+                
+                if (!cubeAnimation) {                    
+                    cubeAnimation = !cubeAnimation;
+                    
+                    // animation style
+                    // 到時候要跟據所有材質的 animation type
+                    // 來調整需要更動哪些時間
+                    gsap.to(uniformsPractice.none_time, {duration: 0.5, value: 0.0, ease: "none"});
+                    gsap.to(uniformsPractice.power2_time, {duration: 0.5, value: 0.0, ease: "power2.out"});
+                    gsap.to(uniformsPractice.power3_time, {duration: 0.5, value: 0.0, ease: "power3.out"});
+                    gsap.to(uniformsPractice.power4_time, {duration: 0.5, value: 0.0, ease: "power4.out"});
+                    gsap.to(uniformsPractice.elastic_time, {duration: 0.5, value: 0.0, ease: "elastic.out(1, 0.3)"});
+                    gsap.to(uniformsPractice.elastic_drastic_time, {duration: 0.5, value: 0.0, ease: "elastic.out(1.5, 0.3)"});
+                    gsap.to(uniformsPractice.circ_in_time, {duration: 0.5, value: 0.0, ease: "circ.in"});
+                    gsap.to(uniformsPractice.circ_time, {duration: 0.5, value: 0.0, ease: "circ.out"});
+                    gsap.to(uniformsPractice.expo_time, {duration: 0.5, value: 0.0, ease: "expo.out"});
+
+                    // 不過 shader 算會比較吃效能
+                    // 統一用 GSAP 處理
+                }
+
+                if (uniformsPractice.none_time.value === 0.0) {
+                    uniformsPractice.none_time.value = 1.0;
+                    uniformsPractice.power2_time.value = 1.0;
+                    uniformsPractice.power3_time.value = 1.0;
+                    uniformsPractice.power4_time.value = 1.0;
+                    uniformsPractice.elastic_time.value = 1.0;
+                    uniformsPractice.elastic_drastic_time.value = 1.0;
+                    uniformsPractice.circ_in_time.value = 1.0;
+                    uniformsPractice.circ_time.value = 1.0;
+                    uniformsPractice.expo_time.value = 1.0;
+
+                    // 判斷式用三個 === 的話 1.0 取的時候會被讀成 1
+                    // auto-casting 的問題
+                    if (uniformsPractice.animate.value === 1.0) { 
+                        uniformsPractice.animate.value = 2.0;
+                        // console.log('change to two');
+                    } else {
+                        uniformsPractice.animate.value = 1.0;
+                        // console.log('change to one');
+                    }
+
+                    setTimeout(() => {
+                        cubeAnimation = !cubeAnimation;
+                    }, 1000);
+                }
+
+                // camera.position.y = 250 * Math.sin((mouseY - camera.position.y) * 0.00035 + 0.6);
+                // camera.position.z = 250 * Math.cos((mouseY - camera.position.y) * 0.00035 + 0.6);
+
+                // group.rotation.y += 0.005;
+                // console.log(camera.rotation.z);
+                // camera.lookAt(0, 0, 0);
+
+                composer.render(scene, camera);
+                stats.end();
+            }
+
+            // function onDocumentMouseMove(event) {
+            //         mouseY = event.clientY;
+            // }
+
+            // document.addEventListener("mousemove", onDocumentMouseMove);
+        </script>
+    </body>
+</html>
